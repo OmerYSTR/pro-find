@@ -70,14 +70,19 @@ def to_upgrade_to_WebSocket(message:HttpMessage) -> bool:
         return True
     
 
-def upgrade_response(request_message:HttpMessage):
-    to_encrypt = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+def upgrade_response(request_message:HttpMessage) -> str:
+    GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+    contecation:str = request_message.websocket_key.strip()+GUID
+    sha1_hash = hashlib.sha1(contecation.encode()).digest()    
+    accept_text = base64.b64encode(sha1_hash).decode("ASCII")
     
-    contecation:str = request_message.websocket_key.strip()+to_encrypt
-    
-    sha1_hash = hashlib.sha1(contecation.encode()).hexdigest()    
-    accept_text = base64.b64encode(sha1_hash.encode())
-
+    version = "HTTP/1.1 "
+    accept_code = "101 Switching Protocols\r\n"
+    upgrade = f"Upgrade: {http_message.upgrade}\r\n"
+    connection = f"Connection: {http_message.connection}\r\n"
+    accept_key = f"Sec-WebSocket-Accept: {accept_text}\r\n"
+    return_text = f"{version}{accept_code}{upgrade}{connection}{accept_key}\r\n"
+    return return_text
 
 
 
@@ -89,5 +94,15 @@ print("Trying to accept")
 clt, addr = soc.accept()
 
 info = recv_http_handshake_msg(clt)
-Http_message = HttpMessageFactory.build_http_message(info)
-print(Http_message)
+http_message = HttpMessageFactory.build_http_message(info)
+print(http_message)
+
+if to_upgrade_to_WebSocket(http_message):
+    to_send = upgrade_response(http_message)
+    clt.send(to_send.encode())
+
+
+    print("Sent handshake")
+    
+    print(clt.recv(1024))
+    
