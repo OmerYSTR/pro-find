@@ -12,7 +12,7 @@ function App() {
       console.log("Initial connection made");
       ws.send("Connected succesfuly");
     }
-    ws.onerror = () => console.log("fucked");
+    ws.onerror = () => console.log("I found an error");
 
 
 
