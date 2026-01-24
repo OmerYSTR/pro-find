@@ -3,6 +3,8 @@ import hashlib
 import base64
 from enum import Enum
 
+               
+#region ---> Handles the WebSocket handshake
 
 def recv_http_handshake_msg(soc:socket.socket) ->bytes:
     data=b""
@@ -13,7 +15,7 @@ def recv_http_handshake_msg(soc:socket.socket) ->bytes:
         data+=chunk
     return data
 
-               
+
 
 class HttpMessage:
     def __init__(self, http_method, protcol_version, host, upgrade,connection, websocket_key):
@@ -36,9 +38,10 @@ class HttpMessage:
 
 
 
-class HttpMessageFactory:
+class HttpMessageParser:
+    
     @staticmethod
-    def build_http_message(msg: bytes) -> HttpMessage:
+    def parse_http_message(msg: bytes) -> HttpMessage:
         headers = msg.split(b'\r\n\r\n')[0].decode()
         lines = headers.split('\r\n')
 
@@ -62,6 +65,7 @@ class HttpMessageFactory:
             return None
 
 
+#Build the Http Upgrade message
 class HttpUpgrade:
 
     def __init__(self, http_message:HttpMessage):
@@ -75,7 +79,6 @@ class HttpUpgrade:
         else:
             return True
         
-
     def upgrade_response(self) -> str:
         GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
         contecation:str = self.message.websocket_key.strip()+GUID
@@ -84,37 +87,60 @@ class HttpUpgrade:
         
         version = "HTTP/1.1 "
         accept_code = "101 Switching Protocols\r\n"
-        upgrade = f"Upgrade: {http_message.upgrade}\r\n"
-        connection = f"Connection: {http_message.connection}\r\n"
+        upgrade = f"Upgrade: {self.message.upgrade}\r\n"
+        connection = f"Connection: {self.message.connection}\r\n"
         accept_key = f"Sec-WebSocket-Accept: {accept_text}\r\n"
         return_text = f"{version}{accept_code}{upgrade}{connection}{accept_key}\r\n"
         return return_text
+
+#endregion 
+
+
 
 
 class WebSocketOpcodes(Enum):
     CONTINUATION = 0x0
     TEXT = 0x1
     BINARY = 0x2
-    CLOSE_CONNETION = 0x8
+    CLOSE_CONNECTION = 0x8
     PING_MESSAGE = 0x9
     PONG_MESSAGE = 0xA
     
 
+#Builds WebSocket messages
 class WebSocketMessageFactory:
-    @staticmethod
-    def is_normal_payload_message() ->bool:
-        pass
+    def __init__(self, opcode:WebSocketOpcodes, to_split=None, payload=None): #All types of message except for pong
+        self.opcode:WebSocketOpcodes = opcode
+        self.to_split = to_split
+        self.payload = payload
+        if self.payload ==None:
+            self.payload =''
+            
+        if self.opcode != WebSocketOpcodes.PONG_MESSAGE and to_split==None:
+            raise RuntimeError("Expected to recieve 'to_split' value but none was given")
+        else:
+            self.message_to_send = self._build_pong_message() if self.opcode == WebSocketOpcodes.PONG_MESSAGE else self._build_websocket_message()
+    
+     
+    def __repr__(self):
+        to_print = f"Message content type - {self.opcode}"
+        if self.to_split != None:
+            to_print+=f"\nMessage needs to be splited - {'True' if self.to_split else 'False'}"
+        if self.payload:
+            to_print+=f"\nMessage content - {self.payload}"
+        
+        to_print+=f"\nMessage to be sent - {self.message_to_send}"
+        return to_print
     
     
-    @staticmethod
-    def build_websocket_message(to_split:bool, opcode:WebSocketOpcodes, payload):
+    def _build_websocket_message(self) ->bytes:
         frame_bytes = bytearray()
     
-        fin = 0 if to_split else 1
-        frame_bytes.append((fin<<7)|opcode.value)
+        fin = 0 if self.to_split else 1
+        frame_bytes.append((fin<<7)|self.opcode.value)
         
         mask = 0 
-        bytes_payload = payload if type(payload)==bytes else payload.encode("UTF-8")
+        bytes_payload = self.payload if type(self.payload)==bytes else self.payload.encode("UTF-8")
         
         def get_length_bits(bytes_payload):
             payload_length = len(bytes_payload)
@@ -137,19 +163,18 @@ class WebSocketMessageFactory:
         frame_bytes.append((mask<<7)|length_field)
         frame_bytes.extend(extend_length_bytes)
         frame_bytes.extend(bytes_payload)
-        print(bytes(frame_bytes))
+        return (bytes(frame_bytes))
 
-
-    @staticmethod
-    def build_pong_message(payload=None):
+    
+    def _build_pong_message(self):
         frame_bytes = bytearray()
         fin = 1
         frame_bytes.append((fin<<7)|WebSocketOpcodes.PONG_MESSAGE.value)
         
         
         mask = 0 
-        if payload:
-            bytes_payload = payload if type(payload)==bytes else payload.encode("UTF-8")
+        if self.payload:
+            bytes_payload = self.payload if type(self.payload)==bytes else self.payload.encode("UTF-8")
             payload_length = len(bytes_payload)
             frame_bytes.append((mask<<7)|payload_length)
             frame_bytes.extend(bytes_payload)
@@ -157,8 +182,112 @@ class WebSocketMessageFactory:
             payload_length = 0
             frame_bytes.append((mask<<7)|payload_length)
             
-        print(bytes(frame_bytes))
+        return(bytes(frame_bytes))
+
+
+
+#region ---> WebSocket message parser
+
+   
+class WebSocketFrame:
+    def __init__(self, fin, opcode, masked, payload_length, payload, masking_key=None):
+        self.message_is_split = False if fin == 1 else True
+        self.opcode = WebSocketOpcodes(opcode)
+        self.masked = bool(masked)
+        self.payload_length = payload_length
+        self.payload = payload       
+        if masking_key:
+            self.masking_key = masking_key
+    
+    def __repr__(self):
+        to_print = ""
+        if self.message_is_split:
+            to_print+="Message is splitted"
+        else:
+            to_print+="This is the whole message"
+        to_print+=f"\nMessage type :{self.opcode}"
+        to_print+=f"\nthis message is {'masked' if self.masked else 'not masked'}"
+        to_print+=f"\nThe payload length is :{self.payload_length}"
+        to_print+=f"\nPayload :{self.payload}"
+        if self.masking_key:
+            to_print+=f"\nMasking key :{self.masking_key}"
+        return to_print
+         
+  
+   
+class WebSocketMessageParser:
+    @staticmethod
+    def _parse_one_frame(clt:socket.socket) ->WebSocketFrame:
+        first_byte = clt.recv(1)[0]
+        fin = (first_byte>>7) & 1
+        opcode = first_byte & 0x0F
         
+        second_byte = clt.recv(1)[0]
+        masked = (second_byte>>7) & 1
+        
+        payload_len = second_byte & 0x7F
+        if payload_len == 126:
+            bytes_of_extended = clt.recv(2)
+            payload_len = int.from_bytes(bytes_of_extended, "big")
+        elif payload_len == 127:
+            bytes_of_extended = clt.recv(8)
+            payload_len = int.from_bytes(bytes_of_extended, "big")
+            
+        if masked:
+            mask = clt.recv(4)
+        else:
+            mask= None
+            
+        payload = b""
+        bytes_to_read = payload_len
+        while bytes_to_read>0:
+            chunk = clt.recv(bytes_to_read)
+            if not chunk:
+                raise RuntimeError("Connection closed by the client")
+            payload+=chunk
+            bytes_to_read-=len(chunk)
+        
+        if masked:
+            payload = bytes(b ^ mask[i % 4] for i, b in enumerate(payload))
+        
+        return WebSocketFrame(fin, opcode, masked, payload_len, payload, masking_key=mask)
+    
+    @staticmethod
+    def parse_message(clt:socket.socket) ->bytes:
+        buffer = b''
+
+        while True:
+            frame = WebSocketMessageParser._parse_one_frame(clt)
+            
+            if frame.opcode in {WebSocketOpcodes.CLOSE_CONNECTION,
+                                WebSocketOpcodes.PING_MESSAGE,
+                                WebSocketOpcodes.PONG_MESSAGE}: 
+                if frame.payload_length>=125 or frame.message_is_split:
+                    return b'FAULTY FRAME'
+                if frame.opcode ==WebSocketOpcodes.CLOSE_CONNECTION:
+                    clt.close()
+                    return b"CLIENT CLOSED"
+                elif frame.opcode==WebSocketOpcodes.PING_MESSAGE:    
+                    to_send = WebSocketMessageFactory(WebSocketOpcodes.PONG_MESSAGE, payload=frame.payload)
+                    clt.send(to_send.message_to_send)
+                continue
+                
+            if frame.opcode not in {WebSocketOpcodes.CONTINUATION,
+                                    WebSocketOpcodes.TEXT,
+                                    WebSocketOpcodes.BINARY} or (frame.opcode == WebSocketOpcodes.CONTINUATION and buffer == b''):
+                return b"FAULTY FRAME"
+            
+            buffer+=frame.payload
+                
+            if not frame.message_is_split:
+                break
+            
+        return buffer
+
+#endregion
+        
+
+
 
 def run_code():
     soc = socket.socket()
@@ -169,7 +298,7 @@ def run_code():
     clt, addr = soc.accept()
 
     info = recv_http_handshake_msg(clt)
-    http_message = HttpMessageFactory.build_http_message(info)
+    http_message = HttpMessageParser.parse_http_message(info)
     print(http_message)
 
 
@@ -178,10 +307,14 @@ def run_code():
         to_send = connection.upgrade_response()
         clt.send(to_send.encode())
 
-        print("Sent handshake")
+        print("Sent handshake\n\n")
+        print(WebSocketMessageParser.parse_message(clt))
         
-        print(clt.recv(1024))
-    
-#run_code()
-#WebSocketMessageFactory.build_websocket_message(False, WebSocketOpcodes.TEXT,"Hello world ooooooooooooooooooooooooooooooooooooaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiisssssssssssssssssssssssssssssssssssssssssss")
-#WebSocketMessageFactory.build_pong_message(payload="test")
+        to_send1 = WebSocketMessageFactory(WebSocketOpcodes.TEXT, to_split=False, payload="Hey client, this is the server")
+        # to_send2 = WebSocketMessageFactory(WebSocketOpcodes.TEXT, to_split=False, payload="And this is a check for splitting a message" )
+        clt.send(to_send1.message_to_send)
+        # clt.send(to_send2.message_to_send)
+        
+        
+        
+run_code()

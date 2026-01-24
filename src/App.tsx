@@ -10,9 +10,10 @@ function App() {
     const ws = new WebSocket("ws://127.0.0.1:1111");
     ws.onopen = () => {
       console.log("Initial connection made");
-      ws.send("Connected succesfuly");
+        ws.send("hey, this is client");
     }
-    ws.onerror = () => console.log("I found an error");
+
+    ws.onmessage = (event) => {console.log("Received data from server: ", event.data)}
 
 
 
