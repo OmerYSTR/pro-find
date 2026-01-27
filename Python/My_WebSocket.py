@@ -288,33 +288,38 @@ class WebSocketMessageParser:
         
 
 
-
-def run_code():
-    soc = socket.socket()
-    soc.bind(("127.0.0.1", 1111))
-    soc.listen(5)
-
-    print("Trying to accept")
-    clt, addr = soc.accept()
-
-    info = recv_http_handshake_msg(clt)
+def accept_websocket_upgrade_request_from_client(clt_soc:socket.socket):
+    info = recv_http_handshake_msg(clt_soc)
     http_message = HttpMessageParser.parse_http_message(info)
-    print(http_message)
+    
+    accept_WebSocket_upgrade = HttpUpgrade(http_message)
+    if accept_WebSocket_upgrade.to_upgrade_to_WebSocket():
+        to_send = accept_WebSocket_upgrade.upgrade_response()
+        clt_soc.send(to_send.encode())
+        print("Connected")
+
+        
+
+def send_message(clt:socket.socket,opcode:WebSocketOpcodes, to_split_message=None, msg=None):
+    try:
+        message = WebSocketMessageFactory(opcode, to_split=to_split_message, payload=msg)
+        clt.send(message.message_to_send)
+        return True
+    except Exception as e:
+        print(e)
+        return False
 
 
-    connection = HttpUpgrade(http_message)
-    if connection.to_upgrade_to_WebSocket():
-        to_send = connection.upgrade_response()
-        clt.send(to_send.encode())
+def recv_message(clt:socket.socket):
+    try:
+        parsed_message = WebSocketMessageParser.parse_message(clt)
+        if parsed_message == b'FAULTY FRAME' or parsed_message == b"CLIENT CLOSED":
+            return None
+        else:
+            return parsed_message
+    except Exception as e:
+        print(e)
+        return None
+    
+    
 
-        print("Sent handshake\n\n")
-        print(WebSocketMessageParser.parse_message(clt))
-        
-        to_send1 = WebSocketMessageFactory(WebSocketOpcodes.TEXT, to_split=False, payload="Hey client, this is the server")
-        # to_send2 = WebSocketMessageFactory(WebSocketOpcodes.TEXT, to_split=False, payload="And this is a check for splitting a message" )
-        clt.send(to_send1.message_to_send)
-        # clt.send(to_send2.message_to_send)
-        
-        
-        
-run_code()
