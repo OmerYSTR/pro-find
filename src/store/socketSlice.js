@@ -1,7 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit'
 import { createElement } from 'react'
 
-const initalState = {
+const initialState = {
     connected: false,
     lastMessage: null
 }
@@ -9,7 +9,7 @@ const initalState = {
 
 const socketSlice = createSlice({
     name:'socket',
-    initalState,
+    initialState,
     reducers:{
         setConnected(state, action){
             state.connected = action.payload
@@ -23,5 +23,5 @@ const socketSlice = createSlice({
     }
 })
 
-export const [setConnected, setDisconnected, setLastMessage] = socketSlice.actions
+export const {setConnected, setDisconnected, setLastMessage} = socketSlice.actions
 export default socketSlice.reducer
