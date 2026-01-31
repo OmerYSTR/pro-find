@@ -1,16 +1,17 @@
 //#region imports
 import {createContext, useContext, useState, useEffect} from 'react'
 import { useDispatch } from 'react-redux'
-import { MessageTypes } from './SocketMessageTypes'
+import { MessageTypes } from './SocketMessageTypes.js'
 import { 
     appointmentRecvd, 
     appointmentAddedForUser, 
     appointmentAddedForFreelancer, 
     appointmentRemovedForUser, 
     appointmentRemovedForFreelancer } 
-from '../store/appointmentsSlice'
+from '../store/appointmentsSlice.js'
 import {login, logout} from '../store/authSlice.js'
-import { professionalRecvd,setFilter } from '../store/professionalsSlice'
+import { professionalRecvd,setFilter } from '../store/professionalsSlice.js'
+import webSocketParser from './parseWebSocket.js'
 //#endregion
 
 const SocketContext = createContext(null)
@@ -34,10 +35,13 @@ export const SocketProvider = ({children}) =>{
         setSocket(ws)
         const handleMessage = (event) => {
             try{
-                console.log(event.data)
-                const data = JSON.parse(event.data);
-                const {type, payload} = data;
-                //console.log(type, payload)
+                //console.log(event.data)
+                const parsed = webSocketParser(event.data)
+                if (!parsed) return;
+                const {type, data} = parsed;
+                const payload = data
+                console.log(type, payload)
+                
                 switch (type){
                     case MessageTypes.USER_INFO:
                         dispatch(login(payload));

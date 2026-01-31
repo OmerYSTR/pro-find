@@ -2,8 +2,9 @@ import socket
 import hashlib
 import base64
 from enum import Enum
-
-               
+import json
+import base64
+from message_types import MessageTypes
 #region ---> Handles the WebSocket handshake
 
 def recv_http_handshake_msg(soc:socket.socket) ->bytes:
@@ -300,14 +301,45 @@ def accept_websocket_upgrade_request_from_client(clt_soc:socket.socket):
 
         
 
-def send_message(clt:socket.socket,opcode:WebSocketOpcodes, to_split_message=None, msg=None):
+
+
+def build_proper_json_payload(type:MessageTypes, payload):
+    type_of_message = type.value
+    type_of_data = "JSON"
+
+    if isinstance(payload, bytes):
+        safe_payload = base64.b64encode(payload).decode("utf-8")
+        type_of_data = "BYTES"
+    else:
+        try:
+            json.dumps(payload) 
+            safe_payload = payload
+        except (TypeError, OverflowError):
+            safe_payload = str(payload)
+
+    return {
+        "type": type_of_message,
+        "data": safe_payload,
+        "data_type": type_of_data
+    }
+
+
+def send_message(clt: socket.socket, opcode, type, msg=None, to_split_message=None):
     try:
-        message = WebSocketMessageFactory(opcode, to_split=to_split_message, payload=msg)
+        msg_dict = build_proper_json_payload(type, msg) if msg is not None else None
+
+        msg_to_send = json.dumps(msg_dict)
+        
+        message = WebSocketMessageFactory(opcode, to_split=to_split_message, payload=msg_to_send)
         clt.send(message.message_to_send)
         return True
+
     except Exception as e:
-        print(e)
+        print("Failed to send message:", e)
         return False
+
+
+
 
 
 def recv_message(clt:socket.socket):

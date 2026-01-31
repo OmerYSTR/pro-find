@@ -1,9 +1,7 @@
 import socket
 import threading
-from My_WebSocket import WebSocketOpcodes, send_message , accept_websocket_upgrade_request_from_client , recv_message 
+import My_WebSocket
 from message_types import MessageTypes
-import json
-
 
 
 
@@ -11,10 +9,9 @@ import json
 
 
 def handle_client(clt_soc:socket.socket):
-    accept_websocket_upgrade_request_from_client(clt_soc)
+    My_WebSocket.accept_websocket_upgrade_request_from_client(clt_soc)
     info = {"name":"Omer", "age":17}
-    to_send = json.dumps(f"type:{MessageTypes.USER_INFO.value},data:{info}")
-    send_message(clt_soc, WebSocketOpcodes.TEXT, to_split_message=False, msg=to_send)
+    My_WebSocket.send_message(clt_soc, My_WebSocket.WebSocketOpcodes.TEXT, MessageTypes.USER_INFO,to_split_message=False, msg=info)
 
 
 
