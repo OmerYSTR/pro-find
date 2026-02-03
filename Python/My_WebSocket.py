@@ -5,6 +5,8 @@ from enum import Enum
 import json
 import base64
 from message_types import MessageTypes
+import ssl
+
 #region ---> Handles the WebSocket handshake
 
 def recv_http_handshake_msg(soc:socket.socket) ->bytes:
@@ -288,6 +290,10 @@ class WebSocketMessageParser:
 #endregion
         
 
+def accept_TLS_encryption(clt_soc):
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.load_cert_chain(certfile="cert.pem", keyfile="key.pem")
+    context.wrap_socket(clt_soc, server_side=True)
 
 def accept_websocket_upgrade_request_from_client(clt_soc:socket.socket):
     info = recv_http_handshake_msg(clt_soc)
