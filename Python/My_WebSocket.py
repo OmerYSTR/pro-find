@@ -289,11 +289,22 @@ class WebSocketMessageParser:
 
 #endregion
         
+        
+#region accept client
+def accept_client(clt_soc):
+    new_soc = accept_TLS_encryption(clt_soc)
+    accept_websocket_upgrade_request_from_client(new_soc)
+    return new_soc
 
+    
 def accept_TLS_encryption(clt_soc):
+    CERTIFICATE_PATH = r"C:\Coding\pro-find\certificate\server.crt"
+    KEY_PATH = r"C:\Coding\pro-find\certificate\server.key"
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-    context.load_cert_chain(certfile="cert.pem", keyfile="key.pem")
-    context.wrap_socket(clt_soc, server_side=True)
+    context.load_cert_chain(certfile=CERTIFICATE_PATH, keyfile=KEY_PATH)
+    tls_soc = context.wrap_socket(clt_soc, server_side=True)
+    return tls_soc
+
 
 def accept_websocket_upgrade_request_from_client(clt_soc:socket.socket):
     info = recv_http_handshake_msg(clt_soc)
@@ -304,11 +315,11 @@ def accept_websocket_upgrade_request_from_client(clt_soc:socket.socket):
         to_send = accept_WebSocket_upgrade.upgrade_response()
         clt_soc.send(to_send.encode())
         print("Connected")
-
+#endregion
         
-
-
-
+        
+        
+        
 def build_proper_json_payload(type:MessageTypes, payload):
     type_of_message = type.value
     type_of_data = "JSON"

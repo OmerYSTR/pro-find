@@ -1,24 +1,16 @@
 //#region imports
 import {createContext, useContext, useState, useEffect} from 'react'
-import { useDispatch } from 'react-redux'
-import { MessageTypes } from './SocketMessageTypes.js'
-import { 
-    appointmentRecvd, 
-    appointmentAddedForUser, 
-    appointmentAddedForFreelancer, 
-    appointmentRemovedForUser, 
-    appointmentRemovedForFreelancer } 
-from '../store/appointmentsSlice.js'
-import {login, logout} from '../store/authSlice.js'
-import { professionalRecvd,setFilter } from '../store/professionalsSlice.js'
+import { handleCase } from './MessageHandler.js'
 import webSocketParser from './parseWebSocket.js'
+import { useDispatch } from 'react-redux'
 //#endregion
 
 const SocketContext = createContext(null)
 let wsSingleton = null;
-const getWebSocket = () =>{
+
+const getWebSocket = (ip, port) =>{
     if (!wsSingleton){
-        wsSingleton = new WebSocket('ws://127.0.0.1:1111');
+        wsSingleton = new WebSocket(`wss://${ip}:${port}`);
         wsSingleton.onopen =() =>console.log("Socket Opened");
         wsSingleton.onclose=() =>console.log("Socket Closed");
     }
@@ -31,53 +23,29 @@ export const SocketProvider = ({children}) =>{
 
 
     useEffect(() =>{
-        const ws = getWebSocket()
+        const ws = getWebSocket("127.0.0.1", "1111")
         setSocket(ws)
+
         const handleMessage = (event) => {
             try{
-                //console.log(event.data)
                 const parsed = webSocketParser(event.data)
+
                 if (!parsed) return;
-                const {type, data} = parsed;
-                const payload = data
-                console.log(type, payload)
                 
-                switch (type){
-                    case MessageTypes.USER_INFO:
-                        dispatch(login(payload));
-                        break;
-                    case MessageTypes.GET_APPOINTMENTS:
-                        dispatch(appointmentRecvd(payload));
-                        break;
-                    case MessageTypes.NEW_APPOINTMENT_USER_RECEIVED:
-                        dispatch(appointmentAddedForUser(payload));
-                        break;
-                    case MessageTypes.NEW_APPOINTMENT_FREELANCER_RECEIVED:
-                        dispatch(appointmentAddedForFreelancer(payload));
-                        break;
-                    case MessageTypes.REMOVED_APPOINTMENT_USER:
-                        dispatch(appointmentRemovedForUser(payload));
-                        break;
-                    case MessageTypes.REMOVED_APPOINTMENT_FREELANCER:
-                        dispatch(appointmentRemovedForFreelancer(payload));
-                        break;
-                    case MessageTypes.PROFESSIONAL_LIST:
-                        dispatch(professionalRecvd(payload));
-                        break;
-                    case MessageTypes.PROFESSIONAL_FILTER:
-                        dispatch(setFilter(payload));
-                        break;
-                    default:
-                        console.warn('Unknown message type: ', type);
-                }
-            }
-            catch(err){console.error('Failed to parse message: ',err);}
+
+                const {type, data} = parsed;
+                const payload = data;
+                console.log(`Type of message:${type}\nPayload of message:`,payload);
+                
+                handleCase(type, payload, dispatch);
+              
+            } catch(err){console.error('Failed to parse message: ',err);}
         };
 
         ws.addEventListener("message", handleMessage);
         return () => ws.removeEventListener("message", handleMessage);
 
-    },[dispatch])
+    },[])
 
     return (
         <SocketContext.Provider value={socket}>

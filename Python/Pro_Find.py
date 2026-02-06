@@ -9,7 +9,7 @@ from message_types import MessageTypes
 
 
 def handle_client(clt_soc:socket.socket):
-    My_WebSocket.accept_websocket_upgrade_request_from_client(clt_soc)
+    clt_soc = My_WebSocket.accept_client(clt_soc)
     info = {"name":"Omer", "age":17}
     My_WebSocket.send_message(clt_soc, My_WebSocket.WebSocketOpcodes.TEXT, MessageTypes.USER_INFO,to_split_message=False, msg=info)
 
