@@ -35,7 +35,7 @@ export const SocketProvider = ({children}) =>{
 
                 const {type, data} = parsed;
                 const payload = data;
-                console.log(`Type of message:${type}\nPayload of message:`,payload);
+                console.log(`Type of message:${type}\n`,"payload of message: ",payload);
                 
                 handleCase(type, payload, dispatch);
               

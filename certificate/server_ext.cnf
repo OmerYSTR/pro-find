@@ -1,0 +1,9 @@
+[ v3_server ]
+basicConstraints = CA:FALSE
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+
+[ alt_names ]
+DNS.1 = Omer.com
+IP.1  = 192.168.1.216

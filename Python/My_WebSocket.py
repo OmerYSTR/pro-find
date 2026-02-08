@@ -301,6 +301,7 @@ def accept_TLS_encryption(clt_soc):
     CERTIFICATE_PATH = r"C:\Coding\pro-find\certificate\server.crt"
     KEY_PATH = r"C:\Coding\pro-find\certificate\server.key"
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.verify_mode = ssl.CERT_NONE
     context.load_cert_chain(certfile=CERTIFICATE_PATH, keyfile=KEY_PATH)
     tls_soc = context.wrap_socket(clt_soc, server_side=True)
     return tls_soc
