@@ -47,7 +47,7 @@ class HttpMessageParser:
     def parse_http_message(msg: bytes) -> HttpMessage:
         headers = msg.split(b'\r\n\r\n')[0].decode()
         lines = headers.split('\r\n')
-
+        print(lines)
         http_method, _, protocol_version = lines[0].split(' ')
 
         header_dict = {}
@@ -298,10 +298,10 @@ def accept_client(clt_soc):
 
     
 def accept_TLS_encryption(clt_soc):
-    # CERTIFICATE_PATH = r"C:\Coding\pro-find\certificate\server.crt"
-    # KEY_PATH = r"C:\Coding\pro-find\certificate\server.key"
-    CERTIFICATE_PATH =r"D:\find-me\certificate\server.crt"
-    KEY_PATH = r"D:\find-me\certificate\server.key"
+    CERTIFICATE_PATH = r"C:\Coding\pro-find\certificate\server.crt"
+    KEY_PATH = r"C:\Coding\pro-find\certificate\server.key"
+    # CERTIFICATE_PATH =r"D:\find-me\certificate\server.crt"
+    # KEY_PATH = r"D:\find-me\certificate\server.key"
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
     context.verify_mode = ssl.CERT_NONE
     context.load_cert_chain(certfile=CERTIFICATE_PATH, keyfile=KEY_PATH)

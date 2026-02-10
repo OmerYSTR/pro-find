@@ -13,7 +13,8 @@ IF %ERRORLEVEL% NEQ 0 (
 echo Running with admin rights in %CD%...
 
 copy .\openssl_crt.cnf .\openssl_crt_tmp.cnf
-echo IP.1 = %1 >> .\openssl_crt_tmp.cnf
+powershell -Command "(Get-Content openssl_crt.cnf) -replace '__SERVER_IP__', '%1' | Set-Content openssl_crt_tmp.cnf"
+
 
 openssl genrsa -out RootCA.key 4096
 openssl req -x509 -new -nodes -key RootCA.key -sha256 -days 3650 -out RootCA.crt
