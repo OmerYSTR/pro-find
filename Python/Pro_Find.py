@@ -21,7 +21,7 @@ def main_thread(srv_soc:socket.socket):
         t = threading.Thread(target=handle_client, args=(clt,), daemon=True)
         t.start()
 
-
+s
 
 if __name__ == "__main__":
     srv = socket.socket()
