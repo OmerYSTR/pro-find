@@ -1,13 +1,27 @@
 import './App.css'
-import { useSelector } from 'react-redux'
-function App() {
-  const userInfo = useSelector(state => state.auth.currentUser)
-  return (
-  <div>
-  <>Hi {userInfo?.name}<br></br></>
-  <>You are {userInfo?.age} years old </>
-  </div>
-)
-}
+import {Routes, Route} from "react-router-dom"
+import LogIn from './pages/login'
+import HomePage from './pages/homePage'
+import ProtectedRoutes from './pages/protectedRoutes.jsx'
 
-export default App
+export default function App() {
+  return (
+    <Routes>
+      <Route path="login" element={<LogIn/>}/>
+      <Route 
+        path = '/*'
+        element={
+          <ProtectedRoutes>
+            <Routes>
+              <Route path='/' element={<HomePage/>}/>
+            </Routes>
+          </ProtectedRoutes>
+        }
+
+
+      />
+
+    </Routes>
+  )
+
+}

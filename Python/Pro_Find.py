@@ -10,8 +10,8 @@ from message_types import MessageTypes
 
 def handle_client(clt_soc:socket.socket):
     clt_soc = My_WebSocket.accept_client(clt_soc)
-    info = {"name":"Omer", "age":17}
-    My_WebSocket.send_message(clt_soc, My_WebSocket.WebSocketOpcodes.TEXT, MessageTypes.USER_INFO,to_split_message=False, msg=info)
+    while True:
+        pass
 
 
 
@@ -21,7 +21,6 @@ def main_thread(srv_soc:socket.socket):
         t = threading.Thread(target=handle_client, args=(clt,), daemon=True)
         t.start()
 
-s
 
 if __name__ == "__main__":
     srv = socket.socket()
