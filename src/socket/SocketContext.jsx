@@ -10,7 +10,7 @@ let wsSingleton = null;
 
 const getWebSocket = (ip, port) =>{
     if (!wsSingleton){
-        wsSingleton = new WebSocket(`wss://${ip}:${port}`);
+        wsSingleton = new WebSocket(`ws://${ip}:${port}`);
         wsSingleton.onopen =() =>console.log("Socket Opened");
         wsSingleton.onclose=() =>console.log("Socket Closed");
     }
@@ -23,7 +23,9 @@ export const SocketProvider = ({children}) =>{
 
 
     useEffect(() =>{
-        const ws = getWebSocket("127.0.0.1", "1111")
+        const IP = "127.0.0.1";
+        const PORT = "1111";
+        const ws = getWebSocket(IP, PORT)
         setSocket(ws)
 
         const handleMessage = (event) => {

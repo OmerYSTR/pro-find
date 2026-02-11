@@ -1,3 +1,3 @@
 export default function HomePage(){
-    console.log("Home page");
+    console.log("Schedule");
 }
