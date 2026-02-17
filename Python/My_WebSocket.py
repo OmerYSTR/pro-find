@@ -47,7 +47,6 @@ class HttpMessageParser:
     def parse_http_message(msg: bytes) -> HttpMessage:
         headers = msg.split(b'\r\n\r\n')[0].decode()
         lines = headers.split('\r\n')
-        print(lines)
         http_method, _, protocol_version = lines[0].split(' ')
 
         header_dict = {}
@@ -293,15 +292,18 @@ class WebSocketMessageParser:
 #region accept client
 def accept_client(clt_soc):
     new_soc = accept_TLS_encryption(clt_soc)
+    print("Accepted")
     accept_websocket_upgrade_request_from_client(new_soc)
     return new_soc
 
     
 def accept_TLS_encryption(clt_soc):
-    CERTIFICATE_PATH = r"C:\Coding\pro-find\certificate\server.crt"
-    KEY_PATH = r"C:\Coding\pro-find\certificate\server.key"
-    # CERTIFICATE_PATH =r"D:\find-me\certificate\server.crt"
-    # KEY_PATH = r"D:\find-me\certificate\server.key"
+    # CERTIFICATE_PATH = r"C:\Coding\pro-find\certificate\server.crt"
+    # KEY_PATH = r"C:\Coding\pro-find\certificate\server.key"
+    CERTIFICATE_PATH =r"D:\pro-find\certificate\server.crt"
+    KEY_PATH = r"D:\pro-find\certificate\server.key"
+    # CERTIFICATE_PATH = r"C:\Users\User\Downloads\server.crt"
+    # KEY_PATH = r"C:\Users\User\Downloads\server.key"
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
     context.verify_mode = ssl.CERT_NONE
     context.load_cert_chain(certfile=CERTIFICATE_PATH, keyfile=KEY_PATH)

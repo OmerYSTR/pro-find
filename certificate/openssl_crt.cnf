@@ -1,24 +1,20 @@
-[ req ]
+[req]
 default_bits       = 2048
-prompt             = no
-default_md         = sha256
 distinguished_name = req_distinguished_name
-req_extensions     = v3_req
+req_extensions     = req_ext
+prompt             = no
 
-[ req_distinguished_name ]
+[req_distinguished_name]
 C  = IL
 ST = Israel
 L  = Kfar Saba
 O  = CyberClass
-OU = IT
-CN = Omer.com
+CN = MySecureServer
 
-[ v3_req ]
-basicConstraints = CA:FALSE
-keyUsage = critical, digitalSignature, keyEncipherment
-extendedKeyUsage = serverAuth
+[req_ext]
 subjectAltName = @alt_names
 
-[ alt_names ]
-IP.1 = 127.0.0.1
-IP.2 = __SERVER_IP__
+[alt_names]
+# for use in Hosts file
+DNS.1 = omer.ystr
+DNS.2 = localhost

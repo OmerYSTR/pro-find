@@ -9,7 +9,8 @@ from message_types import MessageTypes
 
 
 def handle_client(clt_soc:socket.socket):
-    My_WebSocket.accept_websocket_upgrade_request_from_client(clt_soc)
+    My_WebSocket.accept_client(clt_soc)
+    print(My_WebSocket.recv_message(clt_soc))
     while True:
         pass
 
