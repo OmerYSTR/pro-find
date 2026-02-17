@@ -8,8 +8,8 @@ from message_types import MessageTypes
 
 
 
-def handle_client(clt_soc:socket.socket):
-    My_WebSocket.accept_client(clt_soc)
+def handle_client(soc:socket.socket):
+    clt_soc = My_WebSocket.accept_client(soc)
     print(My_WebSocket.recv_message(clt_soc))
     while True:
         pass

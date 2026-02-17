@@ -292,18 +292,15 @@ class WebSocketMessageParser:
 #region accept client
 def accept_client(clt_soc):
     new_soc = accept_TLS_encryption(clt_soc)
-    print("Accepted")
     accept_websocket_upgrade_request_from_client(new_soc)
     return new_soc
 
     
 def accept_TLS_encryption(clt_soc):
-    # CERTIFICATE_PATH = r"C:\Coding\pro-find\certificate\server.crt"
-    # KEY_PATH = r"C:\Coding\pro-find\certificate\server.key"
-    CERTIFICATE_PATH =r"D:\pro-find\certificate\server.crt"
-    KEY_PATH = r"D:\pro-find\certificate\server.key"
-    # CERTIFICATE_PATH = r"C:\Users\User\Downloads\server.crt"
-    # KEY_PATH = r"C:\Users\User\Downloads\server.key"
+    CERTIFICATE_PATH = r"C:\Coding\pro-find\certificate\server.crt"
+    KEY_PATH = r"C:\Coding\pro-find\certificate\server.key"
+    # CERTIFICATE_PATH =r"D:\pro-find\certificate\server.crt"
+    # KEY_PATH = r"D:\pro-find\certificate\server.key"
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
     context.verify_mode = ssl.CERT_NONE
     context.load_cert_chain(certfile=CERTIFICATE_PATH, keyfile=KEY_PATH)
@@ -370,7 +367,8 @@ def recv_message(clt:socket.socket):
         if parsed_message == b'FAULTY FRAME' or parsed_message == b"CLIENT CLOSED":
             return None
         else:
-            return parsed_message
+            to_return = json.loads(parsed_message)
+            return to_return["type"], to_return["data"], to_return["data_type"]
     except Exception as e:
         print(e)
         return None

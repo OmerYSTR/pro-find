@@ -1,3 +1,11 @@
+//Messages are sent in this format:
+//{
+//  type: type of message...
+//  data: actual payload of the message, if more then one field then sent as a dict
+//  data_type: BYTES or JSON
+//}
+
+
 export default function webSocketParser(payload)
 {
     try{

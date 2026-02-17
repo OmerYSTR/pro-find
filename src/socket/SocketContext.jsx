@@ -1,7 +1,6 @@
 //#region imports
 import {createContext, useContext, useState, useEffect} from 'react'
-import { handleCase } from './MessageHandler.js'
-import webSocketParser from './parseWebSocket.js'
+import webSocketParser from './MsgParser.js'
 import { useDispatch } from 'react-redux'
 //#endregion
 
@@ -10,7 +9,7 @@ let wsSingleton = null;
 
 const getWebSocket = (ip, port) =>{
     if (!wsSingleton){
-        wsSingleton = new WebSocket(`ws://${ip}:${port}`);
+        wsSingleton = new WebSocket(`wss://${ip}:${port}`);
         wsSingleton.onopen =() =>console.log("Socket Opened");
         wsSingleton.onclose=() =>console.log("Socket Closed");
     }
@@ -23,30 +22,10 @@ export const SocketProvider = ({children}) =>{
 
 
     useEffect(() =>{
-        const IP = "127.0.0.1";
+        const IP = "omer.ystr";
         const PORT = "1111";
         const ws = getWebSocket(IP, PORT)
         setSocket(ws)
-
-        const handleMessage = (event) => {
-            try{
-                const parsed = webSocketParser(event.data)
-
-                if (!parsed) return;
-                
-
-                const {type, data} = parsed;
-                const payload = data;
-                console.log(`Type of message:${type}\n`,"payload of message: ",payload);
-                
-                handleCase(type, payload, dispatch);
-              
-            } catch(err){console.error('Failed to parse message: ',err);}
-        };
-
-        ws.addEventListener("message", handleMessage);
-        return () => ws.removeEventListener("message", handleMessage);
-
     },[])
 
     return (
