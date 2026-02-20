@@ -1,0 +1,107 @@
++-------------------+
+|       users       |
++-------------------+
+| PK id             |
+| full_name         |
+| email (UNIQUE)    |
+| password_hash     |
+| user_type         | 'customer' or 'professional'
+| created_at        |
+| profile_image     |
+| salt              |
++-------------------+
+
++----------------------------+
+|      professionals         |
++----------------------------+
+| PK id                      |
+| FK user_id → USERS.id      |
+| professional_number        |
+| profession                 |
+| service_cities             |
+| description                |
+| years_experience           |
+| avg_job_duration           |
+| rating                     |
++----------------------------+
+
++--------------------------------------+
+|              ratings                 |
++--------------------------------------+
+| PK id                                |
+| FK professional_id → PROFESSIONALS.id|
+| FK customer_id → USERS.id            |
+| rating (1-5)                         |
+| review                               |
+| created_at                           |
++--------------------------------------+
+
++-------------------------------------------+
+|               appointments                |
++-------------------------------------------+
+| PK id                                     |
+| FK professional_id → PROFESSIONALS.id     |
+| FK customer_id → USERS.id                 |
+| date                                      |
+| start_time                                |
+| end_time                                  |
+| address                                   |
+| details                                   |
+| status                                    |
+| cancel_reason                             |
+| created_at                                |
++-------------------------------------------+
+
++--------------------------------------+
+|           blocked_times              |
++--------------------------------------+
+| PK id                                |
+| FK professional_id → PROFESSIONALS.id|
+| date                                 |
+| start_time                           |
+| end_time                             |
+| reason                               |
+| created_at                           |
++--------------------------------------+
+
++--------------------------------------+
+|           working_hours              |
++--------------------------------------+
+| PK id                                |
+| FK professional_id → PROFESSIONALS.id|
+| day_of_week (0-6)                    |
+| start_time                           |
+| end_time                             |
+| is_working (0/1)                     |
+| created_at                           |
++--------------------------------------+
+
++--------------------------------------+
+|               chats                  |
++--------------------------------------+
+| PK id                                |
+| FK user_id → USERS.id                |
+| FK professional_id → PROFESSIONALS.id|
+| last_message_at                      |
++--------------------------------------+
+
++--------------------------------------+
+|              messages                |
++--------------------------------------+
+| PK id                                |
+| FK chat_id → CHATS.id                |
+| FK sender_id → USERS.id              |
+| FK receiver_id → USERS.id            |
+| content                              |
+| sent_at                              |
++--------------------------------------+
+
++--------------------------------------+
+|           notifications              |
++--------------------------------------+
+| PK id                                |
+| FK user_id → USERS.id                |
+| message                              |
+| is_read (0/1)                        |
+| created_at                           |
++--------------------------------------+
