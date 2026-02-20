@@ -2,18 +2,24 @@ import socket
 import threading
 import My_WebSocket
 from message_types import MessageTypes
+from DBHandler import TableFunctions, TableHandler
 
 
+
+
+
+
+def handle_message(soc:socket.socket, msg_type:str, data, type_of_data):
+    pass
 
 
 
 
 def handle_client(soc:socket.socket):
     clt_soc = My_WebSocket.accept_client(soc)
-    print(My_WebSocket.recv_message(clt_soc))
     while True:
-        pass
-
+        type_of_msg, data, type_of_data = My_WebSocket.recv_message(clt_soc)
+        
 
 
 def main_thread(srv_soc:socket.socket):
