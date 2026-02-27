@@ -11,6 +11,6 @@ export function LoginRequest(username, password, ws){
         "password": password
     }
     const msg = MsgBuild(MessageTypes.LOGIN_REQUEST_RESPONSE, payload, "JSON")
-    console.log(msg)
+    console.log(`Sending - ${msg}`)
     ws.send(msg)
 }

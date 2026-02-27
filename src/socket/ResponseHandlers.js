@@ -5,13 +5,13 @@
     //Returns true if server logged client in and false if not
     export const handleLoginResponse = (payload, dispatch) =>{
         if (MessageTypes.LOGIN_REQUEST_RESPONSE == payload.type)
-            if (payload.data.status == StatusMessage.LOGGED_IN)
+            if (payload.data == StatusMessage.LOGGED_IN)
             {
-                //Update user info
-                dispatch(login(payload.data.info))
-                return {success:true, worked:""};}
-            else if (payload.data.status == StatusMessage.FAILED_LOG_IN)
-                return {success:false, worked:payload.data.info};
+                dispatch(login())
+                return true;
+            }
+            else if (payload.data == StatusMessage.FAILED_LOG_IN)
+                return false;
             else
                 console.log("Unknown response")
         else

@@ -62,7 +62,7 @@ def configure_dispatcher() -> MessageDispatcher:
         
 class LoginDispatcher(MessageHandler):
     def handle(self, msg:Message) -> tuple:
-        to_ret = MessageTypes.LOGIN_REQUEST_RESPONSE, {"status":StatusMessage.FAILED_LOG_IN.value, "info":"your password or email is incorrect"}
+        to_ret = MessageTypes.LOGIN_REQUEST_RESPONSE, StatusMessage.FAILED_LOG_IN.value
 
         email = msg.data["email"]
         password = msg.data["password"]
@@ -80,9 +80,8 @@ class LoginDispatcher(MessageHandler):
             if db_password == hashed_ps:
                 cursor.execute("SELECT full_name, email, user_type, profile_image FROM users WHERE email=?", (email,))
                 user = cursor.fetchone()
-                print(user)
                 user_dict = {"name":user[0], "email":user[1], "user type":user[2]}
                 if len(user)== 4 and user[3]:
                     user_dict["image":user[3]]
-                return MessageTypes.LOGIN_REQUEST_RESPONSE, {"status":StatusMessage.LOGGED_IN.value, "info":user_dict}  
+                return MessageTypes.LOGIN_REQUEST_RESPONSE, StatusMessage.LOGGED_IN.value
         return to_ret
