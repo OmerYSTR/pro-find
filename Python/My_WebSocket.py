@@ -343,7 +343,7 @@ def build_proper_json_payload(type:MessageTypes, payload):
     }
 
 
-def send_message(clt: socket.socket, opcode:WebSocketOpcodes, type, msg=None, to_split_message=None):
+def send_message(clt: socket.socket, type, msg=None, to_split_message=None, opcode:WebSocketOpcodes=WebSocketOpcodes.TEXT):
     try:
         msg_dict = build_proper_json_payload(type, msg) if msg is not None else None
 
@@ -367,8 +367,7 @@ def recv_message(clt:socket.socket):
         if parsed_message == b'FAULTY FRAME' or parsed_message == b"CLIENT CLOSED":
             return None
         else:
-            to_return = json.loads(parsed_message)
-            return to_return["type"], to_return["data"], to_return["data_type"]
+            return json.loads(parsed_message)
     except Exception as e:
         print(e)
         return None

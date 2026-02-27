@@ -10,6 +10,11 @@
 | profile_image     |
 | salt              |
 +-------------------+
+Omer Yaffet Stern
+yaffetsterno@gmail.com
+111
+customer
+
 
 +----------------------------+
 |      professionals         |

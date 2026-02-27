@@ -1,7 +1,5 @@
 export const MessageTypes = Object.freeze({
-  LOGIN_REQUEST: 'LOGIN_REQ',
-  LOGIN_RESPONSE: 'LOGIN_RES',
-  
+  LOGIN_REQUEST_RESPONSE: "LOGIN",
   USER_INFO: 'USRINFO',
   GET_APPOINTMENTS: 'GETAPPOINT',
   NEW_APPOINTMENT_USER_RECEIVED: 'UPDATE_APPOINT_USER',
@@ -11,4 +9,10 @@ export const MessageTypes = Object.freeze({
   PROFESSIONAL_LIST: 'PRO_LIST',
   PROFESSIONAL_FILTER: 'PRO_FILTER',
 });
+
+
+export const StatusMessage = Object.freeze({
+    LOGGED_IN: "LOGGED",
+    FAILED_LOG_IN: "FAILED_LOG"
+})
 

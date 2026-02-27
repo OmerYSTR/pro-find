@@ -58,3 +58,10 @@ body, html {
     color: #333333;
 }
 
+.error {
+    color: #FF4C4C;       
+    font-size: 14px;      
+    margin-top: 10px;     
+    text-align: left;     
+}
+

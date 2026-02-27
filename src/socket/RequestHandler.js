@@ -7,10 +7,10 @@ import { MessageTypes } from "./MsgTypes"
 
 export function LoginRequest(username, password, ws){
     const payload = {
-        "username": username,
+        "email": username,
         "password": password
     }
-    const msg = MsgBuild(MessageTypes.LOGIN_REQUEST, payload, "JSON")
+    const msg = MsgBuild(MessageTypes.LOGIN_REQUEST_RESPONSE, payload, "JSON")
     console.log(msg)
     ws.send(msg)
 }

@@ -1,25 +1,24 @@
 import socket
 import threading
 import My_WebSocket
-from message_types import MessageTypes
-from DBHandler import TableFunctions, TableHandler
+import MessageHandler
+import json
 
-
-
-
-
-
-def handle_message(soc:socket.socket, msg_type:str, data, type_of_data):
-    pass
-
-
+dispacher = MessageHandler.configure_dispatcher()
 
 
 def handle_client(soc:socket.socket):
     clt_soc = My_WebSocket.accept_client(soc)
     while True:
-        type_of_msg, data, type_of_data = My_WebSocket.recv_message(clt_soc)
+        payload = My_WebSocket.recv_message(clt_soc)
         
+        msg = MessageHandler.Message(payload)
+        handler_type, to_send = dispacher.dispatch(msg)
+        
+        My_WebSocket.send_message(clt_soc, handler_type, to_send, True if len(json.dumps(to_send))>1000 else False)
+        
+
+
 
 
 def main_thread(srv_soc:socket.socket):
