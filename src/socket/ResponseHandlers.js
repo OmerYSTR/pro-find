@@ -4,7 +4,7 @@
 
     //Returns true if server logged client in and false if not
     export const handleLoginResponse = (payload, dispatch) =>{
-        if (MessageTypes.LOGIN_REQUEST_RESPONSE == payload.type)
+        if (MessageTypes.LOGIN == payload.type)
             if (payload.data == StatusMessage.LOGGED_IN)
             {
                 dispatch(login())

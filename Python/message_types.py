@@ -1,8 +1,8 @@
 from enum import Enum
 
 class MessageTypes(Enum):
-    LOGIN_REQUEST_RESPONSE = "LOGIN"
-    
+    LOGIN = "LOGIN"
+    SIGNUP = "SIGNUP"
     USER_INFO= 'USRINFO'
     GET_APPOINTMENTS= 'GETAPPOINT'
     NEW_APPOINTMENT_USER_RECEIVED= 'UPDATE_APPOINT_USER'

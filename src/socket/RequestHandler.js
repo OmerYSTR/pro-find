@@ -10,7 +10,7 @@ export function LoginRequest(username, password, ws){
         "email": username,
         "password": password
     }
-    const msg = MsgBuild(MessageTypes.LOGIN_REQUEST_RESPONSE, payload, "JSON")
+    const msg = MsgBuild(MessageTypes.LOGIN, payload, "JSON")
     console.log(`Sending - ${msg}`)
     ws.send(msg)
 }

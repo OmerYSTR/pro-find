@@ -52,17 +52,16 @@ class MessageDispatcher:
 def configure_dispatcher() -> MessageDispatcher:
     d = MessageDispatcher()
     
-    d.register("LOGIN", LoginDispatcher)
+    d.register(MessageTypes.LOGIN.value, LoginDispatcher)
+    d.register(MessageTypes.SIGNUP.value, SignUpDispatcher)
     
     return d
         
 
-
-
         
 class LoginDispatcher(MessageHandler):
     def handle(self, msg:Message) -> tuple:
-        to_ret = MessageTypes.LOGIN_REQUEST_RESPONSE, StatusMessage.FAILED_LOG_IN.value
+        to_ret = MessageTypes.LOGIN, StatusMessage.FAILED_LOG_IN.value
 
         email = msg.data["email"]
         password = msg.data["password"]
@@ -83,5 +82,11 @@ class LoginDispatcher(MessageHandler):
                 user_dict = {"name":user[0], "email":user[1], "user type":user[2]}
                 if len(user)== 4 and user[3]:
                     user_dict["image":user[3]]
-                return MessageTypes.LOGIN_REQUEST_RESPONSE, StatusMessage.LOGGED_IN.value
+                return MessageTypes.LOGIN, StatusMessage.LOGGED_IN.value
         return to_ret
+    
+    
+    
+class SignUpDispatcher(MessageHandler):
+    def handle(self, msg:Message) ->tuple:
+        pass
