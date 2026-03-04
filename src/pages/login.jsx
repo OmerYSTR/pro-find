@@ -50,39 +50,42 @@ export default function LogIn(payload){
         <div className="bg-white p-10 rounded-xl shadow-md w-90 text-center">
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Login</h2>
 
-        <form className="flex flex-col items-center">
-        <input
-            type="text"
-            placeholder="email"
-            required
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="w-full p-2 mb-3 border border-gray-300 rounded-md"
-        />
-        <input
-            type="password"
-            placeholder="Password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-2 mb-3 border border-gray-300 rounded-md"
-        />
+        <form className="flex flex-col items-center"   onSubmit={(e) => {
+            e.preventDefault();
+            setAttempted(true);
+            LoginRequest(username, password, ws);
+        }}>
+            <input
+                type="email"
+                placeholder="email"
+                required
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full p-2 mb-3 border border-gray-300 rounded-md"
+            />
+            <input
+                type="password"
+                placeholder="Password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full p-2 mb-3 border border-gray-300 rounded-md"
+            />
+
+            {!loginWorked && attempted && (
+            <p className="text-red-500 text-sm text-left mb-3">
+                One of the credentials inserted is incorrect
+            </p>
+            )}
+
+            <button
+            type="submit"
+            className="w-full p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
+            >
+            Login
+            </button>
         </form>
-
-        {!loginWorked && attempted && (
-        <p className="text-red-500 text-sm text-left mb-3">
-            One of the credentials inserted is incorrect
-        </p>
-        )}
-
-        <button
-        type="button"
-        onClick={LoginClick}
-        className="w-full p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
-        >
-        Login
-        </button>
-
+        
         <Link to="/signup" className="block mt-3 text-blue-600 hover:underline">
         Sign up
         </Link>

@@ -110,3 +110,24 @@ customer
 | is_read (0/1)                        |
 | created_at                           |
 +--------------------------------------+
+
+
++-------------------------------------------+
+| pending_users |
++-------------------------------------------+
+| PK id                                     |
+| full_name                                 |
+| email (UNIQUE)                            |
+| password_hash                             |
+| salt                                      |
+| user_type ('User' / 'Freelancer')         |
+|                                           |
+| profession (NULL if User)                 |
+| years (NULL if User)                      |
+| job_duration (NULL if User)               |
+| description (NULL if User)                |
+|                                           |
+| verification_code                         |
+| expires_at                                |
+| created_at                                |
++-------------------------------------------+

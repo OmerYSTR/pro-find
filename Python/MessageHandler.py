@@ -4,6 +4,9 @@ import hashlib
 import os
 from message_types import MessageTypes, StatusMessage
 from abc import ABC, abstractmethod
+import re
+from Lists import LOCALITIES, PROFESSIONS
+from datetime import datetime, timedelta
 
 DATABASE = "my_app.db"
 PEPPER = "CYBERISH"
@@ -53,7 +56,8 @@ def configure_dispatcher() -> MessageDispatcher:
     d = MessageDispatcher()
     
     d.register(MessageTypes.LOGIN.value, LoginDispatcher)
-    d.register(MessageTypes.SIGNUP.value, SignUpDispatcher)
+    d.register(MessageTypes.USER_SIGNUP.value, UserSignUpService)
+    d.register(MessageTypes.FREELANCER_SIGNUP.value, FreelancerSignUpService)
     
     return d
         
@@ -81,14 +85,118 @@ class LoginDispatcher(MessageHandler):
                 user = cursor.fetchone()
                 user_dict = {"name":user[0], "email":user[1], "user type":user[2]}
                 if len(user)== 4 and user[3]:
-                    user_dict["image":user[3]]
+                    user_dict["image"] = user[3]
                 return MessageTypes.LOGIN, StatusMessage.LOGGED_IN.value
         return to_ret
     
     
     
-class SignUpDispatcher(MessageHandler):
-    def handle(self, msg:Message) ->tuple:
+    
+    
+class UserSignUpService(MessageHandler):
+    def handle(self, msg:Message) -> tuple:
+        v = UserSignUpValidator()
+        info_is_good, message = v.validate(msg)
+        print(MessageTypes.USER_SIGNUP, message)
+        if not info_is_good:
+            return MessageTypes.USER_SIGNUP, message
+    
+    
+class FreelancerSignUpService(MessageHandler):
+    def handle(self, msg:Message) -> tuple:
+        v = FreelancerSignUpValidator()
+        info_is_good, message = v.validate(msg)
+        if not info_is_good:
+            return MessageTypes.FREELANCER_SIGNUP, message
+        return MessageTypes.FREELANCER_SIGNUP, "GOOD"
+        #Start the validation
+    
+    
+    
+    
+class Validator(ABC):
+    @abstractmethod
+    def validate(self, msg:Message) ->tuple[bool:str]:
         pass
     
     
+
+    
+    
+class UserSignUpValidator(Validator):
+    def validate(self, msg:Message) ->tuple[bool, str]:
+        #Password I don't check
+        #Name I don't check
+        email = msg.data["email"]
+        if not self._check_email_format(email):
+            return False, "Email format is incorrect"
+        return True, ""
+        
+        
+    def _check_email_format(self, email):
+        pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+        return re.match(pattern, email) is not None
+        
+    
+        
+class FreelancerSignUpValidator(Validator):
+    def validate(self, msg:Message) ->tuple[bool, str]:
+        #Password I don't check
+        #Name I don't check
+        data = msg.data
+        
+        email = data["email"]
+        if not self._check_email_format(email):
+            return False, "Email format is incorrect"
+
+
+        if data["profession"] not in PROFESSIONS:
+            return False, "Job isn't recognized"
+
+
+        if not self._check_city(data["cities"]):
+            return False, "City not recognized"
+
+            
+        if data["years"] > 40:
+            return False, "Experience seems a bit off..."
+
+        
+        try:
+            start_dt = datetime.strptime(data["startWorking"], "%H:%M")
+            finish_dt = datetime.strptime(data["finishWorking"], "%H:%M")
+            job_duration_dt = datetime.strptime(data["jobDuration"], "%H:%M")
+            job_duration = timedelta(hours=job_duration_dt.hour, minutes=job_duration_dt.minute)
+        except:
+            return False, "Work, start, or finish time bad format"
+
+
+        if start_dt >= finish_dt:
+            return False, "Start work time must be before finish work time"
+        
+        
+        if job_duration.total_seconds() <= 0 or job_duration >= timedelta(days=1):
+            return False, "Enter proper job duration"
+
+        first_job_time = start_dt + job_duration
+        if first_job_time > finish_dt:
+            return False, "You won't complete a single job..."
+        
+        
+        if data["role"] not in ["Freelancer", "User"]:
+            return False, "No such user type"
+        
+        return True, ""
+        
+        
+    def _check_city(self, cities):
+        for city in cities:
+            if city not in LOCALITIES:
+                return False
+        return True
+
+          
+    def _check_email_format(self, email):
+        pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+        return re.match(pattern, email) is not None
+

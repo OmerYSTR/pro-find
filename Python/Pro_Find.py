@@ -15,6 +15,7 @@ def handle_client(soc:socket.socket):
             msg = MessageHandler.Message(payload)
         except:
             break
+        print(msg.type_of, msg.data)
         handler_type, to_send = dispacher.dispatch(msg)
         print(handler_type, to_send)
         My_WebSocket.send_message(clt_soc, handler_type, to_send, True if len(json.dumps(to_send))>1000 else False)

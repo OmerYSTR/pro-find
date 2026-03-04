@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { BackToLogin, freelancerProfessions, RolePopup, InputField, ErrorMessage, SingleChoiceDropDownMenu, MultiChoiceDropDownMenu, israeliLocalities} from "./signUpModule";
+import {useSocket} from "../socket/SocketContext"
+import { SignUpRequest } from "../socket/RequestHandler";
 
 
 
-
-
-function UserSignUp({ userInfo, setUserInfo }){
+function UserSignUp({ userInfo, setUserInfo, onSubmit, serverError }){
   const [confirmPassword, setConfirmPassword] = useState("")
   const [passwordMismatch, setPasswordMismatch] = useState(false)
   const [infoEntered, setInfoEntered] = useState(true)
@@ -27,13 +27,17 @@ function UserSignUp({ userInfo, setUserInfo }){
     const hasEmptyFields = Object.values(userInfo).some(value => !value)
     if (!hasEmptyFields && confirmPassword !== ""){
       setInfoEntered(true)
+      
       if(userInfo.password!==confirmPassword){
         setPasswordMismatch(true)
         setConfirmPassword("");}
-      else{
+      
+        else{
         setPasswordMismatch(false)  
+        onSubmit()
       }}
-    else{
+    
+      else{
       setPasswordMismatch(false)
       setInfoEntered(false)
     }
@@ -77,7 +81,7 @@ function UserSignUp({ userInfo, setUserInfo }){
 
 
 
-function FreelancerSignUp({ freelancerInfo, setFreeLancerInfo}){
+function FreelancerSignUp({ freelancerInfo, setFreeLancerInfo, onSubmit, serverError}){
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordMismatch, setPasswordMismatch] = useState(false);
   const [infoEntered, setInfoEntered] = useState(true);
@@ -91,7 +95,7 @@ function FreelancerSignUp({ freelancerInfo, setFreeLancerInfo}){
   const [jobDurationHour, setJobDurationHour] = useState("")
   const [jobDurationMinute, setJobDurationMinute] = useState("")
 
-  let widthForBigDropDowns = "465px";
+  let widthForBigDropDowns = "480px";
   let widthForSmallDropDowns = "90px";
   let timeWidth = '50px';
 
@@ -163,6 +167,7 @@ Self description - ${freelancerInfo.description }
           setConfirmPassword("");}
         else{
           setPasswordMismatch(false)  
+          onSubmit()
         }}
       else{
         setPasswordMismatch(false)
@@ -316,6 +321,8 @@ Self description - ${freelancerInfo.description }
 
 
 export default function SignUpPage() {
+  const ws = useSocket()
+
   const [role, setRole] = useState(null);
   const [userInfo, setUserInfo] = useState({ name:"", email:"", password:""});
   const [freelancerInfo, setFreelancerInfo] = useState({
@@ -330,17 +337,26 @@ export default function SignUpPage() {
       jobDuration:0,
       description: ""
   });
+  const [serverError, setServerError] = useState("");
 
+  const handleSubmit = () => {
+    if (role === "User")
+      SignUpRequest(ws, userInfo, role);
+    else
+      SignUpRequest(ws, freelancerInfo, role);
+
+
+  }
 
   return (
     <>
         {!role ? (
         <RolePopup onSelect={ setRole } />
         ) : role === "User" ? (
-            <UserSignUp userInfo={userInfo} setUserInfo={setUserInfo}/>
+            <UserSignUp userInfo={userInfo} setUserInfo={setUserInfo} serverError={serverError} onSubmit={handleSubmit}/>
             ) 
             : (
-            <FreelancerSignUp freelancerInfo={freelancerInfo} setFreeLancerInfo={setFreelancerInfo}/>
+            <FreelancerSignUp freelancerInfo={freelancerInfo} setFreeLancerInfo={setFreelancerInfo} serverError={serverError} onSubmit={handleSubmit}/>
             )}
     </>
     )
