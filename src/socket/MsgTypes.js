@@ -15,6 +15,9 @@ export const MessageTypes = Object.freeze({
 
 export const StatusMessage = Object.freeze({
     LOGGED_IN: "LOGGED",
-    FAILED_LOG_IN: "FAILED_LOG"
+    FAILED_LOG_IN: "FAILED_LOG",
+
+    SIGNING_UP: "SIGNED",
+    FAILED_SIGN_UP: "FAILED_SIGNED" 
 })
 

@@ -1,0 +1,120 @@
+Acre
+Afula
+Arad
+Ashdod
+Ashkelon
+Be'er Sheva
+Bat Yam
+Beit Shemesh
+Bnei Brak
+Caesarea
+Dimona
+Eilat
+El'ad
+Givatayim
+Hadera
+Haifa
+Herzliya
+Holon
+Hod HaSharon
+Jerusalem
+Karmiel
+Kfar Saba
+Kiryat Ata
+Kiryat Bialik
+Kiryat Gat
+Kiryat Motzkin
+Kiryat Ono
+Kiryat Shemona
+Lod
+Modi'in-Maccabim-Reut
+Nahariya
+Nazareth
+Netanya
+Ness Ziona
+Nof HaGalil
+Petah Tikva
+Ramla
+Ramat Gan
+Ramat HaSharon
+Ra'anana
+Rehovot
+Rishon LeZion
+Safed
+Sderot
+Tiberias
+Umm al-Fahm
+Yavne
+Yehud-Monosson
+Yokneam Illit
+Abu Ghosh
+Abu Sinan
+Akbara
+Alfei Menashe
+Alkanah
+Afula Illit
+Ain al-Asad
+Ar'ara
+Azor
+Basma
+Basmah Tivon
+Beit Aryeh-Ofarim
+Beit Dagan
+Beit El
+Beit HaEmek
+Beit Hillel
+Beit She'an Illit
+Beit Shemesh (Local Council area)
+Ben Shemen
+Bnei Ayish
+Bnei Atarot
+Bu’eine Nujeidat
+Buq’ata
+Daburiyya
+Deir Hanna
+Ein Mahil
+Ein Naqquba
+Ein Qiniyye
+Fassuta
+Ganei Tikva
+Gedera
+Givat Hen
+Givat Shmuel
+Harish
+Hodaya
+Iksal
+Immanuel
+Jatt
+Julis
+Kafr Kanna
+Kafr Manda
+Kafr Qara
+Kfar Blum
+Kfar Yona
+Kfar Yasif
+Kfar Vradim
+Kiryat Ekron
+Kiryat Ono
+Kiryat Tiv’on
+Kokhav Ya’ir
+Kuseife
+Lehavim
+Mazkeret Batya
+Mevaseret Zion
+Metula
+Migdal HaEmek
+Mishmar HaShiv’a
+Neve Shalom
+Nof Ayalon
+Otzem
+Or Akiva
+Pardes Hanna-Karkur
+Poria Illit
+Rosh Pinna
+Sde Warburg
+Shoham
+Tayibe
+Tzoran-Kadima
+Yagur
+Yesud HaMa’ala
+Zikhron Ya’akov

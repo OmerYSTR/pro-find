@@ -16,3 +16,6 @@ class MessageTypes(Enum):
 class StatusMessage(Enum):
     LOGGED_IN = "LOGGED"
     FAILED_LOG_IN = "FAILED_LOG"
+    
+    SIGNING_UP = "SIGNED"
+    FAILED_SIGN_UP = "FAILED_SIGNED" 

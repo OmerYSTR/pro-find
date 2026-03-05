@@ -1,0 +1,631 @@
+Accountant
+Accounting Technician
+Accounts Assistant
+Actor
+Actuary
+Acupuncturist
+Administrative Assistant or Officer
+Advertising Account Executive
+Advertising Account Planner
+Advertising Copywriter
+Advice Worker
+Advocate
+Advocates' Clerk
+Aerospace Engineer
+Agricultural Consultant
+Agricultural Scientist
+Air Cabin Crew
+Air Conditioning Engineer
+Air Quality Consultant
+Air Traffic Controller
+Aircraft Maintenance Technician
+Airline Pilot
+Airline or Airport Passenger Service Assistant
+Ambulance Care Assistant
+Ambulance Technician
+Anatomical Pathology Technologist
+Animal Care Assistant
+Animal Technician
+Animator
+Applications Developer
+Arborist
+Archaeologist
+Architect
+Architectural Technologist
+Archivist
+Army – Officer
+Army – Soldier
+Aromatherapist
+Art Therapist
+Artificial Intelligence Specialist/Engineer
+Arts Administrator
+Assembler
+Assistance Dog Trainer
+Astronomer or Astrophysicist
+Auctioneer
+Audiologist
+Automotive Engineer
+BIM Technician
+Baker or Confectioner
+Bank or Building Society Customer Adviser
+Bank or Building Society Manager
+Bar Worker
+Barber
+Beauty Therapist
+Biochemist
+Biologist
+Biomedical Scientist
+Biomedical Support Worker
+Biotechnologist
+Blacksmith
+Blockchain Developer
+Boat or Ship Builder
+Body Piercer
+Border Force Officer
+Botanist
+Brewery Worker
+Bricklayer
+British Sign Language Interpreter
+Broadcast Assistant
+Broadcast Engineer
+Broadcast Journalist
+Builders' Merchant
+Building Services Engineer
+Building Standards Surveyor
+Building Technician
+Bus or Coach Driver
+Business Adviser
+Butcher
+CAD Technician
+CCTV Operator
+CNC Machinist
+Cabinet Maker
+Call Centre Agent
+Camera Operator
+Car Valet
+Cardiac Physiologist
+Care Assistant or Support Worker
+Care Home Manager
+Careers Adviser
+Cartographer
+Casino Dealer
+Catering Manager
+Ceiling Fixer
+Cemetery Worker
+Ceramic Designer
+Character Artist
+Charity Fundraiser
+Chef or Cook
+Chemical Engineer
+Chemical Engineering Technician
+Chemical Plant Process Operative
+Chemist
+Childminder
+Children’s Holiday Representative
+Chiropractor
+Choreographer
+Cinema or Theatre Assistant
+Cinema or Theatre Manager
+Civil Engineer
+Civil Engineering Technician
+Civil Service Administrative Assistant and Officer
+Civil Service Administrator
+Classroom Assistant
+Cleaner
+Clerical or Administrative Assistant
+Clerk of Court
+Clerk of Works
+Clinical Perfusionist
+Clinical Photographer
+Clinical Technologist (Clinical Engineering)
+Clinical and Biomedical Engineer
+Cloud Engineer
+Coastguard
+Commissioning Editor
+Community Arts Worker
+Community Learning and Development Officer
+Community Warden
+Community Waste Officer
+Company Secretary
+Composer or Songwriter
+Conference Producer
+Construction Manager or Site Manager
+Control and Instrumentation Engineer
+Copy Editor
+Costume Designer
+Counsellor
+Countryside Ranger or Warden
+Craft Designer
+Credit Manager
+Crematorium Technician
+Customer Service Administrator
+Cyber Security Analyst
+Cycle Mechanic
+Dance Movement Psychotherapist
+Dance Teacher
+Dancer
+Data Analyst
+Data Protection Officer
+Data Scientist
+Database Administrator
+Decontamination Technician
+Delivery Driver
+Demolition Operative
+Dental Hygienist or Therapist
+Dental Nurse
+Dental Technician
+Dentist
+Derrickhand
+Design Engineer
+Dietetic Support Worker
+Dietitian
+Digital Content Editor
+Digital Marketer
+Diplomatic Service Operational Officer
+Disc Jockey – DJ
+Dispensing Optician
+Distillery Worker
+Diver
+Doctor – GP
+Doctor – Hospital
+Document Controller
+Dog Groomer
+Dog Handler
+Dramatherapist
+Driller
+Drilling Engineer
+Driving Examiner
+Driving Instructor
+Drone Pilot
+Dryliner
+Dynamic Positioning Operator
+ESG (Environmental, Social and Governance) Analyst
+Early Years Practitioner
+Economic Development Officer
+Economist
+Electrical Engineer
+Electrical Project Engineer
+Electrical or Electronic Engineering Technician
+Electrician
+Electricity Distribution Worker
+Electronics Engineer
+Embalmer
+Emergency Call Handler
+Engineering Operative
+Environment and Compliance Adviser
+Environmental Consultant
+Environmental Health Officer
+Environmental Manager
+Environmental Specialist Decommissioning
+Ergonomist
+Estate Agent
+Estate or Land Manager
+Estimator
+Events Manager
+Exhibition Designer
+Export Sales Manager
+Fabric Cutter
+Fabricator or Plater
+Facilities Manager
+Farm Manager
+Farm Worker or Stockperson
+Farrier
+Fashion Designer
+Fashion Model
+Field Engineer
+Field Service Technician
+Field Team Manager
+Film or Video Editor
+Financial Adviser
+Fine Artist
+Firefighter
+Fish Farm Manager
+Fish Farm Worker
+Fishing Vessel Worker
+Fitness Instructor
+Flight Dispatcher
+Floor Layer or Carpet Fitter
+Floor Manager – Television
+Florist
+Food Scientist or Technologist
+Forensic Computer Analyst
+Forensic Scene Examiner
+Forensic Scientist
+Forest Manager
+Forest Worker
+Forest or Wildlife Ranger
+Forklift Truck Operator
+Formworker
+Freight Forwarder
+Front End Developer
+Fundraising Manager
+Funeral Director
+Furniture Designer
+Gamekeeper
+Games Designer
+Games Programmer
+Games Tester
+Garden Centre Worker
+Gardener
+Garment or Textile Technologist
+Gas Heating Engineer
+Gas Service Engineer
+General Construction Operative
+Geneticist
+Geologist
+Geophysicist
+Geoscientist
+Glass Designer or Maker
+Glazier
+Glazing Technician
+Government Intelligence Officer or Analyst
+Graphic Designer
+Groundsperson
+Gym Instructor
+Hair Stylist
+Health Improvement Officer
+Health Records Staff
+Health Service Manager
+Health Visitor or Public Health Nurse
+Health and Safety Inspector
+Health and Safety Officer
+Heating and Ventilation Engineer
+Helicopter Pilot
+Herbalist
+Holiday Centre Worker
+Home Media Engineer
+Homeopath
+Horticultural Scientist
+Hospital Porter
+Hotel General Manager
+Hotel Porter
+Hotel Receptionist
+Housekeeping Manager
+Housing Officer
+Human Resources Officer or Manager
+Hydraulic Technician
+Hydrogen Project Development Officer
+Hypnotherapist
+IT Helpdesk Analyst
+IT Support Engineer
+Illustrator
+Immigration Enforcement Officer
+Insurance Account Manager
+Insurance Broker
+Insurance Claims Handler
+Insurance Loss Adjuster
+Insurance Risk Surveyor
+Insurance Underwriter
+Integrity Engineer
+Interior Designer
+Interpreter
+Investment Analyst
+Investment Banker
+Investment Operations Administrator
+Jeweller
+Jewellery Designer
+Joiner or Carpenter
+Journalist or Reporter
+Judge or Sheriff
+Kitchen Assistant
+Laboratory Technician
+Landbased Service Engineer
+Landscape Architect
+Landscaper
+Learning Support Assistant
+Lecturer
+Legal Secretary
+Librarian or Information Professional
+Library or Information Assistant
+Life Support Technician – Saturation Divers
+Lifeguard or Pool Attendant
+Lighting Technician
+Literary Agent
+Local Government Administrative Assistant or Officer
+Local Government Officer
+Locksmith
+Loft and Cavity Insulation Technician
+Logistics Manager
+Lorry or LGV Driver
+Machine Printer
+Make
+Management Consultant
+Manufacturing Systems Engineer
+Marine Biologist
+Marine Engineer
+Market Research Executive
+Market Research Interviewer
+Marketing Manager
+Mastic Asphalter
+Materials Scientist or Engineer
+Maternity Support Worker
+Mathematician
+Meat Process Worker
+Mechanical Engineer
+Mechanical Engineering Technician
+Medical Pathologist
+Medical Physicist
+Medical Representative
+Medical Secretary
+Member of Parliament
+Merchant Navy Deck Officer
+Merchant Navy Engineering Officer
+Merchant Navy Rating
+Meteorologist
+Meter Reader
+Microbiologist
+Midwife
+Model Maker
+Motor Vehicle Technician
+Motorcycle Instructor
+Motorcycle Technician
+Mudlogger
+Museum Assistant or Visitor Assistant
+Museum Conservation Officer
+Museum or Art Gallery Curator
+Music Promotions Manager
+Music Therapist
+Musical Instrument Technologist
+Musician
+Nail Technician
+Nanny
+Nanotechnologist
+Nature Conservationist
+Naturopath
+Naval Architect
+Network Architect
+Network Engineer
+Neurophysiologist
+Nuclear Engineer
+Nurse
+Nursing Support Worker
+Nutritionist
+Occupational Therapist
+Occupational Therapy Support Worker
+Oceanographer
+Office Manager
+Offshore Chemist
+Offshore Installation Manager
+Offshore Medic
+Offshore Service Technician
+Offshore Technician – Cable and Pipelay
+Offshore Technician – Specialised Tools
+Operating Department Practitioner
+Operational Researcher
+Optical Assistant
+Optical Technician
+Optometrist
+Orthodontist
+Orthoptist
+Osteopath
+Outdoor Activities Instructor or Leader
+PR and Communications Officer
+Painter and Decorator
+Paralegal
+Paramedic
+Parking Warden
+Parliamentary Assistant
+Patent Attorney
+Patent Examiner
+Pattern Cutter or Grader
+Personal Assistant
+Personal Trainer
+Pest Control Technician
+Pet Shop Assistant
+Petroleum or Reservoir Engineer
+Pharmacist
+Pharmacologist
+Pharmacy Support Worker
+Pharmacy Technician
+Phlebotomist
+Photographer
+Photographic Stylist
+Physicist
+Physiotherapist
+Physiotherapy Support Worker
+Piano Tuner
+Picture Framer
+Picture Researcher
+Plant Mechanic
+Plant Operator
+Plasterer
+Play Therapist
+Playworker or Play Leader
+Plumber
+Podiatrist
+Podiatry Support Worker
+Police Officer
+Port Operative
+Post Office Customer Service Consultant
+Postie
+Pre
+Previsualisation Artist
+Print Finisher or Bookbinder
+Print Production Planner
+Prison Officer
+Private Tutor
+Procurator Fiscal
+Procurement Administrator
+Procurement Manager
+Producer
+Product Designer
+Production Assistant
+Production Controller or Manager
+Production Worker
+Project Engineer
+Project Manager
+Prop Maker
+Proposals Coordinator
+Prosthetic or Orthotic Support Worker
+Prosthetist or Orthotist
+Psychologist
+Psychotherapist
+Quality Control Technician
+Quarry Engineer
+ROV Pilot Technician
+Radiographer
+Radiography Support Worker
+Railway Customer Service Assistant
+Railway Maintenance Engineering Technician
+Ramp Agent
+Receptionist
+Recruitment Consultant
+Recycling Operative
+Reflexologist
+Refrigeration Engineer
+Refuse Collector
+Registrar of Births, Deaths, Marriages and Civil Partnerships
+Rehabilitation Engineering Technician
+Removals Operative
+Renewable Energy Consultant
+Renewable Energy Engineer
+Reprographic Assistant
+Reservoir Engineer (Energy)
+Resort Representative
+Respiratory Physiologist
+Restaurant Manager
+Retail Assistant
+Retail Buyer
+Retail Manager
+Revenue and Customs Officer
+Riding Instructor
+Risk Manager
+Road Worker
+Roadie
+Robotics Engineer
+Roof Sheeter and Cladder
+Roofer
+Roofer – Felt
+Room Attendant
+Roustabout
+Royal Air Force Airman or Airwoman
+Royal Air Force Officer
+Royal Marine
+Royal Marines Officer
+Royal Navy Officer
+Royal Navy Rating
+Runner
+SEO Specialist
+Sales Representative
+Scaffolder
+Scenic Artist
+School Janitor
+Scientific or Technical Illustrator
+Scottish SPCA Animal Rescue Officer
+Scottish SPCA Inspector
+Scrum Master
+Sculptor
+Security Officer or Guard
+Security Systems Installer
+Set Designer
+Sewing Machinist
+Sheet Metal Worker
+Sheriff Officer or Messenger
+Shoe Repairer
+Shopfitter
+Signaller
+Signwriter
+Smart Meter Engineer
+Social Worker
+Software Engineer or Developer
+Software Tester
+Solicitor
+Sound Technician
+Special Effects Technician
+Speech and Language Therapist
+Speech and Language Therapy Support Worker
+Sport and Exercise Scientist
+Sports Coach or Instructor
+Sports Development Officer
+Sports Professional
+Sports Therapist
+Sports or Leisure Centre Assistant
+Sports or Leisure Centre Manager
+Stablehand or Groom
+Stage Manager
+Stagehand
+Statistician
+Steeplejack/Lightning Protection Fitter
+Stockbroker
+Stonemason
+Store Detective
+Storyboard Artist
+Street Cleaning Operative
+Structural Engineer
+Structural Engineering Technician
+Stunt Performer
+Sub
+Subsea Engineer
+Supermarket Assistant
+Surgeon
+Surveyor
+Swimming Teacher
+Systems Analyst
+TV or Film Director
+TV or Radio Presenter
+Tailor or Dressmaker
+Tax Officer
+Taxi or Car Driver
+Teacher
+Teacher of English as a Foreign Language
+Technical Author
+Technical Brewer
+Technical Distiller
+Technical Support Engineer (Onshore/Offshore)
+Technical Surveyor
+Telecommunications Engineer
+Textile Designer
+Textile Operative
+Theatre Support Worker
+Thermal Insulation Engineer
+Toolmaker
+Toolpusher
+Tour Guide
+Tour Leader or Manager
+Town Planner
+Trade Union Official
+Trading Standards Officer
+Train Conductor
+Train Driver
+Train Maintenance Technician
+Training and Competency Officer or Manager
+Translator
+Travel Agency Manager
+Travel Consultant
+Tyre or Exhaust Fitter
+Upholsterer
+User Experience (UX) Designer
+Vehicle Body Repairer
+Vehicle Breakdown Engineer
+Vehicle Examiner
+Vehicle MET Technician
+Vehicle Parts Advisor
+Vehicle Salesperson
+Vehicle Spray Painter
+Veterinary Nurse
+Veterinary Surgeon
+Virtual Assistant
+Virtual Reality/Augmented Reality Developer
+Visual Merchandiser
+Waiter or Waitress
+Wall and Floor Tiler
+Warden or Housing Support Officer
+Wardrobe Assistant
+Warehouse Operative
+Waste Energy Engineer
+Watch and Clock Maker or Repairer
+Water or Waste Water Network Operative
+Water or Waste Water Treatment Operative
+Waterway Operative
+Web Designer
+Web Developer
+Welder
+Well Engineer
+Wind Turbine Technician
+Window Fitter
+Wood Machinist
+Writer or Author
+Yoga Teacher
+Youth Worker
+Zookeeper
+Zoologist

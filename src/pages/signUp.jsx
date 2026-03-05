@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { BackToLogin, freelancerProfessions, RolePopup, InputField, ErrorMessage, SingleChoiceDropDownMenu, MultiChoiceDropDownMenu, israeliLocalities} from "./signUpModule";
+import { BackToLogin, freelancerProfessions, RolePopup, InputField, ErrorMessage, SingleChoiceDropDownMenu, MultiChoiceDropDownMenu, israeliLocalities, EmailVerification} from "./signUpModule";
 import {useSocket} from "../socket/SocketContext"
 import { SignUpRequest } from "../socket/RequestHandler";
-
-
+import webSocketParser from "../socket/MsgParser";
+import { handleSignUpResponse } from "../socket/ResponseHandlers";
 
 function UserSignUp({ userInfo, setUserInfo, onSubmit, serverError }){
   const [confirmPassword, setConfirmPassword] = useState("")
@@ -67,6 +67,10 @@ function UserSignUp({ userInfo, setUserInfo, onSubmit, serverError }){
             <ErrorMessage message={"Not all fields were filled"}/>
           )}
 
+          {serverError && (
+            <ErrorMessage message={serverError}/>
+          )}
+
           <button
             type="submit"
             className="bg-blue-400 hover:bg-blue-500 text-white font-semibold py-2 rounded-lg shadow-md mt-2 transition-all"
@@ -94,6 +98,9 @@ function FreelancerSignUp({ freelancerInfo, setFreeLancerInfo, onSubmit, serverE
 
   const [jobDurationHour, setJobDurationHour] = useState("")
   const [jobDurationMinute, setJobDurationMinute] = useState("")
+
+  const [professions, setProfessions] = useState([]);
+  const [cities, setCities] = useState([]);
 
   let widthForBigDropDowns = "480px";
   let widthForSmallDropDowns = "90px";
@@ -127,7 +134,19 @@ function FreelancerSignUp({ freelancerInfo, setFreeLancerInfo, onSubmit, serverE
     }
   }, [jobDurationHour, jobDurationMinute])
 
+ useEffect(() => {
+    const loadProfessions = async () => {
+      const profs = await freelancerProfessions();
+      setProfessions(profs);
+    };
+    loadProfessions();
 
+    const loadCities = async () => {
+      const cityList = await israeliLocalities();
+      setCities(cityList);
+    };
+    loadCities();
+  }, []);
 
   const handleChange = (e) =>{
       const {name, value} = e.target;
@@ -193,11 +212,10 @@ Self description - ${freelancerInfo.description }
             <InputField name={"password"} value={freelancerInfo.password} onChange={handleChange} placeholder={"password"} type={"password"} />
 
             <InputField name={"password2"} value={confirmPassword} onChange ={(e) => setConfirmPassword(e.target.value)} placeholder={"Confirm password"} type={"password"} />
-            
             <SingleChoiceDropDownMenu 
             placeholder ={"Profession"}  
             name={"profession"} 
-            options={freelancerProfessions} 
+            options={professions} 
             value={freelancerInfo.profession} 
             onChange={(professionPicked) => setFreeLancerInfo(prev => ({...prev,profession:professionPicked}))} 
             customWidth ={widthForBigDropDowns}
@@ -205,7 +223,7 @@ Self description - ${freelancerInfo.description }
 
             <MultiChoiceDropDownMenu
             name={"cities"}
-            options={israeliLocalities}
+            options={cities}
             value={freelancerInfo.cities}
             onChange={(selectedCities) => setFreeLancerInfo(prev =>({...prev, cities:selectedCities}))}
             placeholder="Select your areas"
@@ -304,6 +322,10 @@ Self description - ${freelancerInfo.description }
                 <ErrorMessage message={"Not all fields were entered"}/>
               )}
 
+              {serverError && (
+                <ErrorMessage message={serverError}/>
+              )}
+
               <button
                 type="submit"
                 className="bg-blue-400 hover:bg-blue-500 text-white font-semibold py-2 rounded-lg shadow-md mt-2 transition-all"
@@ -337,16 +359,35 @@ export default function SignUpPage() {
       jobDuration:0,
       description: ""
   });
+
   const [serverError, setServerError] = useState("");
 
   const handleSubmit = () => {
+    setServerError("")
     if (role === "User")
       SignUpRequest(ws, userInfo, role);
     else
       SignUpRequest(ws, freelancerInfo, role);
-
-
   }
+
+  useEffect(() =>{
+    if (!ws) return;
+    ws.onmessage = (event) =>{
+      console.log(`Recvd - ${event.data}`)
+      const info = webSocketParser(event.data)
+      const [infoGood, errorMessage]= handleSignUpResponse(info)
+      if (infoGood){
+        setServerError("")
+        EmailVerification()
+      }
+      else{
+        setServerError(errorMessage)
+      }
+
+    }
+  }
+)
+
 
   return (
     <>

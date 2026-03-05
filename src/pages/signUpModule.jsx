@@ -3,351 +3,34 @@ import Select from "react-select"
 
 
 //#region lists
-export const freelancerProfessions = [
-  // Tech & Development
-  "Frontend Developer",
-  "Backend Developer",
-  "Full Stack Developer",
-  "Web Developer",
-  "Mobile App Developer (iOS)",
-  "Mobile App Developer (Android)",
-  "Cross-Platform Developer",
-  "Software Engineer",
-  "Game Developer",
-  "Unity Developer",
-  "Unreal Engine Developer",
-  "Blockchain Developer",
-  "Smart Contract Developer",
-  "AI Engineer",
-  "Machine Learning Engineer",
-  "Data Scientist",
-  "Data Analyst",
-  "DevOps Engineer",
-  "Cloud Engineer",
-  "AWS Specialist",
-  "Cybersecurity Specialist",
-  "Penetration Tester",
-  "Ethical Hacker",
-  "Network Engineer",
-  "Database Administrator",
-  "QA Tester",
-  "Automation Tester",
-  "Embedded Systems Developer",
-  "IoT Developer",
-  "AR/VR Developer",
-  "Technical Support Specialist",
 
-  // Design & Creative
-  "Graphic Designer",
-  "UI Designer",
-  "UX Designer",
-  "Product Designer",
-  "Web Designer",
-  "Logo Designer",
-  "Brand Designer",
-  "Illustrator",
-  "Concept Artist",
-  "3D Modeler",
-  "3D Animator",
-  "Motion Graphics Designer",
-  "Video Editor",
-  "Video Producer",
-  "Photographer",
-  "Photo Editor",
-  "Filmmaker",
-  "Sound Designer",
-  "Music Producer",
-  "Audio Engineer",
-  "Voice Over Artist",
+export const freelancerProfessions = async () => {
+  try {
+    const response = await fetch("/professional.txt");
+    const text = await response.text();
+    return text
+      .split("\n")
+      .map(line => line.trim())
+      .filter(Boolean);
+  } catch (error) {
+    console.error("Error loading professions:", error);
+    return [];
+  }
+};
 
-  // Writing & Content
-  "Copywriter",
-  "Content Writer",
-  "Technical Writer",
-  "Ghostwriter",
-  "Blogger",
-  "SEO Writer",
-  "Scriptwriter",
-  "Screenwriter",
-  "Journalist",
-  "Editor",
-  "Proofreader",
-  "Translator",
-  "Subtitler",
-  "Resume Writer",
-  "Grant Writer",
-  "Academic Writer",
-
-  // Marketing & Sales
-  "Digital Marketer",
-  "Social Media Manager",
-  "Social Media Strategist",
-  "PPC Specialist",
-  "Google Ads Specialist",
-  "Facebook Ads Specialist",
-  "SEO Specialist",
-  "Email Marketing Specialist",
-  "Affiliate Marketer",
-  "Marketing Consultant",
-  "Brand Strategist",
-  "Sales Consultant",
-  "Lead Generation Specialist",
-  "CRM Specialist",
-
-  // Business & Finance
-  "Business Consultant",
-  "Startup Consultant",
-  "Financial Analyst",
-  "Accountant",
-  "Bookkeeper",
-  "Tax Consultant",
-  "Virtual CFO",
-  "Investment Analyst",
-  "Business Analyst",
-  "Operations Consultant",
-  "Project Manager",
-  "Product Manager",
-
-  // Admin & Virtual Assistance
-  "Virtual Assistant",
-  "Executive Assistant",
-  "Data Entry Specialist",
-  "Customer Support Representative",
-  "Chat Support Agent",
-  "Appointment Setter",
-  "Recruiter",
-  "HR Consultant",
-
-  // Education & Coaching
-  "Online Tutor",
-  "Math Tutor",
-  "Programming Tutor",
-  "Language Tutor",
-  "Test Prep Tutor",
-  "Career Coach",
-  "Life Coach",
-  "Fitness Coach",
-  "Business Coach",
-  "Music Teacher",
-  "Art Teacher",
-
-  // Health & Wellness
-  "Personal Trainer",
-  "Nutritionist",
-  "Diet Coach",
-  "Yoga Instructor",
-  "Meditation Instructor",
-  "Wellness Coach",
-
-  // Engineering & Technical Services
-  "Civil Engineer",
-  "Mechanical Engineer",
-  "Electrical Engineer",
-  "Architect",
-  "Interior Designer",
-  "CAD Designer",
-  "Industrial Designer",
-  "Surveyor",
-
-  // E-Commerce & Operations
-  "Shopify Developer",
-  "Amazon FBA Specialist",
-  "Dropshipping Expert",
-  "Product Research Specialist",
-  "Supply Chain Consultant",
-  "Logistics Consultant",
-
-  // Entertainment & Events
-  "DJ",
-  "Event Planner",
-  "Wedding Planner",
-  "MC / Host",
-  "Actor",
-  "Dancer",
-
-  // Legal
-  "Legal Consultant",
-  "Contract Specialist",
-  "Paralegal",
-  "Compliance Consultant",
-
-  // Specialized / Niche
-  "No-Code Developer",
-  "Webflow Developer",
-  "Bubble Developer",
-  "Zapier Automation Specialist",
-  "Notion Consultant",
-  "Airtable Consultant",
-  "Technical Recruiter",
-  "Community Manager",
-  "Discord Manager",
-  "YouTube Editor",
-  "Podcast Editor",
-  "Podcast Producer",
-  "Stream Overlay Designer",
-  "Esports Coach",
-
-  // Other / Miscellaneous Professions
-  "Barber",
-  "Hair Stylist",
-  "Makeup Artist",
-  "Comedian",
-  "Magician",
-  "Tattoo Artist",
-  "Masseuse / Masseur",
-  "Personal Shopper",
-  "House Cleaner",
-  "Plumber",
-  "Electrician",
-  "Carpenter",
-  "Mechanic",
-  "Dog Walker",
-  "Pet Groomer",
-  "Babysitter",
-  "Life Guard",
-  "Tour Guide",
-  "Chef / Personal Chef",
-  "Baker",
-  "Caterer",
-  "Florist",
-  "Painter (Artist)",
-  "Handyman",
-  "Tailor / Seamstress",
-  "Fitness Instructor",
-  "DJ / Musician",
-  "Voice Coach",
-  "Stand-up Comedian",
-  "Photobooth Operator",
-  "Event Host",
-  "Street Performer",
-  "Driving Instructor",
-  "Language Tutor",
-  "Photography Instructor",
-  "Artisan / Craftsman"
-];
-
-export const israeliLocalities = [
- "Acre",
-  "Afula",
-  "Arad",
-  "Ashdod",
-  "Ashkelon",
-  "Be'er Sheva",
-  "Bat Yam",
-  "Beit Shemesh",
-  "Bnei Brak",
-  "Caesarea",
-  "Dimona",
-  "Eilat",
-  "El'ad",
-  "Givatayim",
-  "Hadera",
-  "Haifa",
-  "Herzliya",
-  "Holon",
-  "Hod HaSharon",
-  "Jerusalem",
-  "Karmiel",
-  "Kfar Saba",
-  "Kiryat Ata",
-  "Kiryat Bialik",
-  "Kiryat Gat",
-  "Kiryat Motzkin",
-  "Kiryat Ono",
-  "Kiryat Shemona",
-  "Lod",
-  "Modi'in-Maccabim-Reut",
-  "Nahariya",
-  "Nazareth",
-  "Netanya",
-  "Ness Ziona",
-  "Nof HaGalil",
-  "Petah Tikva",
-  "Ramla",
-  "Ramat Gan",
-  "Ramat HaSharon",
-  "Ra'anana",
-  "Rehovot",
-  "Rishon LeZion",
-  "Safed",
-  "Sderot",
-  "Tiberias",
-  "Umm al-Fahm",
-  "Yavne",
-  "Yehud-Monosson",
-  "Yokneam Illit",
-  "Abu Ghosh",
-  "Abu Sinan",
-  "Akbara",
-  "Alfei Menashe",
-  "Alkanah",
-  "Afula Illit",
-  "Ain al-Asad",
-  "Ar'ara",
-  "Azor",
-  "Basma",
-  "Basmah Tivon",
-  "Beit Aryeh-Ofarim",
-  "Beit Dagan",
-  "Beit El",
-  "Beit HaEmek",
-  "Beit Hillel",
-  "Beit She'an Illit",
-  "Beit Shemesh (Local Council area)",
-  "Ben Shemen",
-  "Bnei Ayish",
-  "Bnei Atarot",
-  "Bu’eine Nujeidat",
-  "Buq’ata",
-  "Daburiyya",
-  "Deir Hanna",
-  "Ein Mahil",
-  "Ein Naqquba",
-  "Ein Qiniyye",
-  "Fassuta",
-  "Ganei Tikva",
-  "Gedera",
-  "Givat Hen",
-  "Givat Shmuel",
-  "Harish",
-  "Hodaya",
-  "Iksal",
-  "Immanuel",
-  "Jatt",
-  "Julis",
-  "Kafr Kanna",
-  "Kafr Manda",
-  "Kafr Qara",
-  "Kfar Blum",
-  "Kfar Yona",
-  "Kfar Yasif",
-  "Kfar Vradim",
-  "Kiryat Ekron",
-  "Kiryat Ono",
-  "Kiryat Tiv’on",
-  "Kokhav Ya’ir",
-  "Kuseife",
-  "Lehavim",
-  "Mazkeret Batya",
-  "Mevaseret Zion",
-  "Metula",
-  "Migdal HaEmek",
-  "Mishmar HaShiv’a",
-  "Neve Shalom",
-  "Nof Ayalon",
-  "Otzem",
-  "Or Akiva",
-  "Pardes Hanna-Karkur",
-  "Poria Illit",
-  "Rosh Pinna",
-  "Sde Warburg",
-  "Shoham",
-  "Tayibe",
-  "Tzoran-Kadima",
-  "Yagur",
-  "Yesud HaMa’ala",
-  "Zikhron Ya’akov"
-];
+export const israeliLocalities = async () => {
+  try {
+    const response = await fetch("/cities.txt");
+    const text = await response.text();
+    return text
+      .split("\n")
+      .map(line => line.trim())
+      .filter(Boolean); 
+  } catch (error) {
+    console.error("Error loading cities:", error);
+    return [];
+  }
+};
 //#endregion
 
 
@@ -476,9 +159,8 @@ export function RolePopup({ onSelect }) {
 }
 
 
-function EmailVerification(){
-
-
+export function EmailVerification(){
+  console.log("Verifying email")
 }
 //#endregion
 
