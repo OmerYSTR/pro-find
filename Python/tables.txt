@@ -123,9 +123,12 @@ customer
 | user_type ('User' / 'Freelancer')         |
 |                                           |
 | profession (NULL if User)                 |
+| cities (NULL if User)                     |
 | years (NULL if User)                      |
 | job_duration (NULL if User)               |
 | description (NULL if User)                |
+| start_working(NULL if User)               |
+| finish_working (NULL if User)             |
 |                                           |
 | verification_code                         |
 | expires_at                                |
