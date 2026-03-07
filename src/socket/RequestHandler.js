@@ -29,7 +29,13 @@ export function SignUpRequest(ws, account_info, type_of_user = "User"){
     console.log(`Sending - ${msg}`)
     ws.send(msg)
 }
+//#endregion
 
 
-
+//#region Verification
+export function VerificationRequest(ws, email, veri_code, role){
+    let payload = {"email":email, "verification_code":veri_code, "role":role}
+    let msg = MsgBuild(MessageTypes.VERIFICATION, payload, "JSON")
+    ws.send(msg)
+}
 //#endregion

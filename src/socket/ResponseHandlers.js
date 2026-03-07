@@ -1,8 +1,9 @@
 import {MessageTypes, StatusMessage} from "./MsgTypes"
 import {login} from "../store/authSlice"
+import StateManagedSelect from "react-select";
 
 
-//Returns true if server logged client in and false if not
+//#region Login
 export const handleLoginResponse = (payload, dispatch) =>{
     if (MessageTypes.LOGIN == payload.type)
         if (payload.data == StatusMessage.LOGGED_IN)
@@ -18,8 +19,10 @@ export const handleLoginResponse = (payload, dispatch) =>{
         console.log("Unknown message type")
 
 }
+//#endregion
 
 
+//#region SignUp
 export const handleSignUpResponse = (payload) =>{
     let signupFailed = StatusMessage.FAILED_SIGN_UP;
     let signupSuccess = StatusMessage.SIGNING_UP;
@@ -33,3 +36,17 @@ export const handleSignUpResponse = (payload) =>{
         }
     }
 }
+//#endregion
+
+
+//#region Verification
+export const handleVerificationReponse = (payload) =>{
+    let data = payload.data
+    if (StatusMessage.VERIFICATION_BAD in data){
+        return [false, data[StatusMessage.VERIFICATION_BAD]]
+    }
+    else if (StatusMessage.VERIFICATION_GOOD in data)
+        return [true, data[StatusMessage.VERIFICATION_GOOD]]
+    return [false, "Server error"]
+}
+//#endregion

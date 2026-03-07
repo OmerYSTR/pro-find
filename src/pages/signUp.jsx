@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect, useInsertionEffect } from "react";
+import { Link, useNavigate} from "react-router-dom";
 import { BackToLogin, freelancerProfessions, RolePopup, InputField, ErrorMessage, SingleChoiceDropDownMenu, MultiChoiceDropDownMenu, israeliLocalities, EmailVerification} from "./signUpModule";
 import {useSocket} from "../socket/SocketContext"
-import { SignUpRequest } from "../socket/RequestHandler";
+import { SignUpRequest, VerificationRequest } from "../socket/RequestHandler";
 import webSocketParser from "../socket/MsgParser";
-import { handleSignUpResponse } from "../socket/ResponseHandlers";
-
+import { handleSignUpResponse, handleVerificationReponse } from "../socket/ResponseHandlers";
+import { MessageTypes } from "../socket/MsgTypes";
 function UserSignUp({ userInfo, setUserInfo, onSubmit, serverError }){
   const [confirmPassword, setConfirmPassword] = useState("")
   const [passwordMismatch, setPasswordMismatch] = useState(false)
@@ -344,6 +344,7 @@ Self description - ${freelancerInfo.description }
 
 export default function SignUpPage() {
   const ws = useSocket()
+  const navigate = useNavigate();
 
   const [role, setRole] = useState(null);
   const [userInfo, setUserInfo] = useState({ name:"", email:"", password:""});
@@ -362,44 +363,74 @@ export default function SignUpPage() {
 
   const [serverError, setServerError] = useState("");
 
-  const handleSubmit = () => {
+  const [showVerification, setShowVerification] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+
+
+  const handleSignUpPageSubmit = () => {
     setServerError("")
     if (role === "User")
       SignUpRequest(ws, userInfo, role);
-    else
+    else if (role === "Freelancer")
       SignUpRequest(ws, freelancerInfo, role);
   }
+
+
+  const handleVerificationCodeSubmit = () =>{
+    setServerError("");
+    if (role==="User")
+      VerificationRequest(ws, userInfo.email, verificationCode, role);
+    else if (role === "Freelancer")
+      VerificationRequest(ws, freelancerInfo.email, verificationCode, role);
+  }
+
 
   useEffect(() =>{
     if (!ws) return;
     ws.onmessage = (event) =>{
       console.log(`Recvd - ${event.data}`)
       const info = webSocketParser(event.data)
-      const [infoGood, errorMessage]= handleSignUpResponse(info)
-      if (infoGood){
-        setServerError("")
-        EmailVerification()
+
+      if (info.type === MessageTypes.VERIFICATION){
+        const [infoGood, serverMessage] = handleVerificationReponse(info);
+        if (infoGood){
+          navigate("/login");
+        }
+        else{
+          setServerError(serverMessage)
+        }
+        
       }
       else{
-        setServerError(errorMessage)
+        const [infoGood, errorMessage]= handleSignUpResponse(info)
+        
+        if (infoGood){
+          setServerError("")
+          setShowVerification(true);
+        }
+        else{
+          setServerError(errorMessage)
+        }
       }
-
     }
-  }
-)
+  },[ws])
 
 
   return (
     <>
-        {!role ? (
+    { showVerification ?(
+        <EmailVerification verificationCode={verificationCode} setVerificationCode={setVerificationCode} handleVerificationCodeSubmit={handleVerificationCodeSubmit} serverError={serverError}/>
+    ): !role ? (
         <RolePopup onSelect={ setRole } />
         ) : role === "User" ? (
-            <UserSignUp userInfo={userInfo} setUserInfo={setUserInfo} serverError={serverError} onSubmit={handleSubmit}/>
+            <UserSignUp userInfo={userInfo} setUserInfo={setUserInfo} serverError={serverError} onSubmit={handleSignUpPageSubmit}/>
             ) 
             : (
-            <FreelancerSignUp freelancerInfo={freelancerInfo} setFreeLancerInfo={setFreelancerInfo} serverError={serverError} onSubmit={handleSubmit}/>
+            <FreelancerSignUp freelancerInfo={freelancerInfo} setFreeLancerInfo={setFreelancerInfo} serverError={serverError} onSubmit={handleSignUpPageSubmit}/>
             )}
     </>
     )
   
 }
+
+

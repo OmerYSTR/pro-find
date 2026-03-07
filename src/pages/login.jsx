@@ -1,5 +1,4 @@
 //#region imports
-import Navbar from "./routerPrint"
 import {Link, useNavigate} from 'react-router-dom'
 import {useState, useEffect} from 'react'
 import {LoginRequest} from '../socket/RequestHandler'

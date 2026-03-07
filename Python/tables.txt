@@ -10,8 +10,8 @@
 | profile_image     |
 | salt              |
 +-------------------+
-Omer Yaffet Stern
-yaffetsterno@gmail.com
+Ido Yaffet
+idoy90@gmail.com
 111
 customer
 
@@ -21,13 +21,14 @@ customer
 +----------------------------+
 | PK id                      |
 | FK user_id → USERS.id      |
-| professional_number        |
 | profession                 |
 | service_cities             |
 | description                |
 | years_experience           |
 | avg_job_duration           |
 | rating                     |
+| start_time                 |
+| end_time                   |
 +----------------------------+
 
 +--------------------------------------+
@@ -66,18 +67,6 @@ customer
 | start_time                           |
 | end_time                             |
 | reason                               |
-| created_at                           |
-+--------------------------------------+
-
-+--------------------------------------+
-|           working_hours              |
-+--------------------------------------+
-| PK id                                |
-| FK professional_id → PROFESSIONALS.id|
-| day_of_week (0-6)                    |
-| start_time                           |
-| end_time                             |
-| is_working (0/1)                     |
 | created_at                           |
 +--------------------------------------+
 

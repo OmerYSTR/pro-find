@@ -21,6 +21,9 @@ export const StatusMessage = Object.freeze({
     FAILED_LOG_IN: "FAILED_LOG",
 
     SIGNING_UP: "SIGNED",
-    FAILED_SIGN_UP: "FAILED_SIGNED" 
+    FAILED_SIGN_UP: "FAILED_SIGNED",
+
+    VERIFICATION_GOOD:"VERI_GOOD",
+    VERIFICATION_BAD:"VERI_BAD"
 })
 

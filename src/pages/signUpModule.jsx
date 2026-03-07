@@ -1,6 +1,9 @@
 import {Link} from "react-router-dom"
 import Select from "react-select"
-
+import {useRef, useState, useEffect} from "react"
+import { StatusMessage } from "../socket/MsgTypes";
+import {useNavigate} from 'react-router-dom'
+import {VerificationRequest} from "../socket/RequestHandler"
 
 //#region lists
 
@@ -63,6 +66,7 @@ export function InputField({ label, type="text", name, value, onChange, placehol
       {label && <label className="mb-1 font-medium">{label}</label>}
       <input
         type={type}
+        required
         name={name}
         value={value || ""}
         onChange={onChange}
@@ -158,9 +162,94 @@ export function RolePopup({ onSelect }) {
   );
 }
 
+export function EmailVerification({ verificationCode, setVerificationCode, handleVerificationCodeSubmit, serverError }) {
+  const navigate = useNavigate()
+  const inputsRef = useRef([])
+  const [error, setError] = useState("") 
 
-export function EmailVerification(){
-  console.log("Verifying email")
+  const handleChange = (value, index) => {
+    const codeArray = verificationCode.split("")
+    codeArray[index] = value
+    const newCode = codeArray.join("")
+    setVerificationCode(newCode)
+
+    if (value && index < 5) {
+      inputsRef.current[index + 1].focus()
+    }
+  }
+
+  const handleKeyDown = (e, index) => {
+    if (e.key === "Backspace") {
+      const codeArray = verificationCode.split("")
+      codeArray[index] = ""
+      setVerificationCode(codeArray.join(""))
+
+      if (index > 0) {
+        inputsRef.current[index - 1].focus()
+      }
+    }
+  }
+
+  const handleSubmit = () => {
+    if (verificationCode.length < 6) {
+      setError("Bad format: 6 digits required")
+      return
+    }
+
+    if (!/^\d{6}$/.test(verificationCode)) {
+      setError("Bad format: Only numbers allowed")
+      return
+    }
+
+    setError("")
+    handleVerificationCodeSubmit()
+  }
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-yellow-100 w-full min-h-screen p-4">
+      
+      <div className="bg-white p-10 rounded-xl shadow-lg w-full max-w-md text-center">
+
+        <h2 className="text-4xl font-semibold text-gray-800 mb-2">
+          Insert Verification Code
+        </h2>
+
+        <p className="text-gray-600 mb-6">
+          A verification code was sent to your email.
+        </p>
+
+        <div className="flex justify-center gap-4 mb-6">
+          {[0,1,2,3,4,5].map((i) => (
+            <input
+              key={i}
+              ref={(el) => (inputsRef.current[i] = el)}
+              type="text"
+              maxLength="1"
+              value={verificationCode[i] || ""}
+              onChange={(e) => handleChange(e.target.value, i)}
+              onKeyDown={(e) => handleKeyDown(e, i)}
+              className="w-14 h-16 text-center text-3xl border-b-4 border-blue-400 focus:border-blue-500 outline-none rounded-sm flex items-center justify-center"
+            />
+          ))}
+        </div>
+
+        {error && <ErrorMessage message={error} />}
+
+
+        {serverError && <ErrorMessage message={serverError}/>}
+
+
+        <button
+          onClick={handleSubmit}
+          className="mt-6 bg-blue-400 hover:bg-blue-500 text-white font-semibold py-2 px-6 rounded transition text-xl w-60 h-15"
+        >
+          Submit
+        </button>
+
+      </div>
+
+    </div>
+  )
 }
 //#endregion
 
