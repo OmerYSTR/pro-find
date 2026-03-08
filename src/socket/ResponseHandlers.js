@@ -50,3 +50,31 @@ export const handleVerificationReponse = (payload) =>{
     return [false, "Server error"]
 }
 //#endregion
+
+
+//#region Forgot password
+export const handleForgotPasswordVerificationCodeResponse =(payload) =>{
+    let data = payload.data
+    if (data === StatusMessage.FORGOT_PASSWORD_GOOD)
+        return true
+    else
+        return false
+}
+
+export const handleForgotPasswordVerifyCodeResponse = (payload) =>{
+    let data = payload.data
+    if (data===StatusMessage.FORGOT_PASSWORD_GOOD)
+        return true
+    else
+        return false
+}
+
+export const handleChangePasswordResponse = (payload) =>{
+    let data = payload.data
+    if (data ===StatusMessage.CHANGE_PASSWORD_BAD)
+        return false
+    else
+        return true
+}
+
+//#endregion

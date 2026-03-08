@@ -39,3 +39,25 @@ export function VerificationRequest(ws, email, veri_code, role){
     ws.send(msg)
 }
 //#endregion
+
+
+//#region Forgot Password
+export function ForgotPasswordVerificationCodeRequest(ws, email){
+    let payload = {"email":email}
+    let msg = MsgBuild(MessageTypes.FORGOT_PASSWORD_REQUEST, payload, "JSON")
+    ws.send(msg)
+}
+
+
+export function ForgotPasswordAuthenticationRequest(ws, email, code){
+    let payload = {"email":email, "veri_code":code}
+    let msg = MsgBuild(MessageTypes.FORGOT_PASSWORD_AUTHENTICATION, payload, "JSON")
+    ws.send(msg)
+}
+
+export function ChangePasswordRequest(ws, email, pass){
+    let payload = {"email":email,"password":pass }
+    let msg = MsgBuild(MessageTypes.CHANGE_PASS, payload, "JSON")
+    ws.send(msg)
+}
+//#endregion
