@@ -138,55 +138,55 @@ class UserSignUpService(MessageHandler):
             data = msg.data
             with sqlite3.connect(DATABASE) as conn:
                 cur = conn.cursor()
+                conn.execute("BEGIN")
                 
                 #Checks if email already exists in system
-                cur.execute("SELECT * FROM users WHERE email=?", (data["email"],))
-                exists = cur.fetchone()
+                cur.execute("SELECT 1 FROM users WHERE email=?", (data["email"],))
 
-                if exists:
+                if cur.fetchone():
+                    conn.rollback()
                     return False, {StatusMessage.FAILED_SIGN_UP.value:"Email already in use"}
             
-            
-            
-                salt = os.urandom(16).hex()
-                password_hash = hash_password(data["password"], salt)
-                
-                ver = EmailVerification(data["email"])
-                
                 #Checks if email exists in table
                 cur.execute("""SELECT expires_at FROM pending_users WHERE email=?""", (data["email"],))
                 find = cur.fetchone()
-
+                
                 if find:
                     expires_at = datetime.strptime(find[0], "%Y-%m-%d %H:%M:%S.%f")
+                    
                     #If time expired
                     if expires_at<datetime.now():
-                        cur.execute("""DELETE FROM pending_users WHERE email=?""", (data["email"],))    
-                        
-                        cur.execute("""INSERT INTO pending_users (full_name, email, password_hash, salt, user_type, verification_code, expires_at)
-                            VALUES (?,?,?,?,?,?,?)""", (data["name"],data["email"], password_hash, salt, data["role"], ver.verification_code, ver.expires_at))
-                        conn.commit()
-                    
+                        cur.execute("""DELETE FROM pending_users WHERE email=?""", (data["email"],))      
                     else:
+                        conn.rollback()
                         return False, {StatusMessage.FAILED_SIGN_UP.value:"Email already in use"}
-                else:
-                    cur.execute("""INSERT INTO pending_users (full_name, email, password_hash, salt, user_type, verification_code, expires_at)
-                            VALUES (?,?,?,?,?,?,?)""", (data["name"],data["email"], password_hash, salt, data["role"], ver.verification_code, ver.expires_at))
-                    conn.commit()
-                    
-            #If verification email sent good
-            if not ver.send_verification_code():
-                cur.execute("""DELETE FROM pending_users WHERE email=?""",(data["email"],))
+                
+                salt = os.urandom(16).hex()
+                password_hash = hash_password(data["password"], salt)
+                ver = EmailVerification(data["email"])   
+                
+                cur.execute("""
+                INSERT INTO pending_users
+                (full_name, email, password_hash, salt, user_type, verification_code, expires_at)
+                VALUES (?,?,?,?,?,?,?)
+            """, (data["name"], data["email"], password_hash, salt, data["role"], ver.verification_code, ver.expires_at))
+                 
+                if not ver.send_verification_code():
+                    conn.rollback()
+                    return False, {StatusMessage.FAILED_SIGN_UP.value:"Failed to send verification email.\nCheck email field"}     
+                
                 conn.commit()
-                return False, {StatusMessage.FAILED_SIGN_UP.value:"Failed to send verification email.\nCheck email field"}     
-            return True, {MessageTypes.VERIFICATION.value:"Sending verification"}
+                return True, {MessageTypes.VERIFICATION.value:"Sending verification"}
                     
+        except sqlite3.IntegrityError:
+            # Handles race condition: two requests at same time trying to insert same email
+            conn.rollback()
+            return False, {StatusMessage.FAILED_SIGN_UP.value: "Email already in use"}
+
         except Exception as e:
-            print("User sign up service - ",e)
-            return False, {StatusMessage.FAILED_SIGN_UP.value:"Not all fields were"}
-        
-        finally:
-            conn.close()
+            conn.rollback()
+            print("User sign up service - ", e)
+            return False, {StatusMessage.FAILED_SIGN_UP.value: "Not all fields were valid"}
     
     
     
@@ -209,59 +209,64 @@ class FreelancerSignUpService(MessageHandler):
     
     
     def _add_pending_freelancer(self, msg:Message) -> tuple[bool,dict]:
+        data = msg.data
         try:
-            data = msg.data
             with sqlite3.connect(DATABASE) as conn:
                 cur = conn.cursor()
+                conn.execute("BEGIN")
                 
                 #Checks if email already exists in system
-                cur.execute("SELECT * FROM users WHERE email=?", (data["email"],))
-                exists = cur.fetchone()
+                cur.execute("SELECT 1 FROM users WHERE email=?", (data["email"],))
 
-                if exists:
+                if cur.fetchone():
+                    conn.rollback()
                     return False, {StatusMessage.FAILED_SIGN_UP.value:"Email already in use"}
-            
-            
-            
-                salt = os.urandom(16).hex()
-                password_hash = hash_password(data["password"], salt)
                 
-                ver = EmailVerification(data["email"])
-                
+    
                 #Checks if email exists in table
-                cur.execute("""SELECT expires_at FROM pending_users WHERE email=?""", (data["email"],))
-                find = cur.fetchone()
-                cities = ", ".join(data["cities"])
-                if find:
-                    expires_at = datetime.strptime(find[0], "%Y-%m-%d %H:%M:%S.%f")
+                cur.execute("SELECT expires_at FROM pending_users WHERE email=?", (data["email"],))
+                row = cur.fetchone()
+
+                if row:
+                    expires_at = datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S.%f")
                     #If time expired
                     if expires_at<datetime.now():
                         cur.execute("""DELETE FROM pending_users WHERE email=?""", (data["email"],))    
-                        
-                        cur.execute("""INSERT INTO pending_users (full_name, email, password_hash, salt, user_type, profession, cities, years, job_duration, description, start_working, finish_working, verification_code, expires_at)
-                            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", (data["name"],data["email"], password_hash, salt, data["role"], data["profession"], cities, data["years"], data["jobDuration"], data["description"],data["startWorking"], data["finishWorking"], ver.verification_code, ver.expires_at))
-                        conn.commit()
-                    
                     else:
+                        conn.rollback()
                         return False, {StatusMessage.FAILED_SIGN_UP.value:"Email already in use"}
-                else:
-                        cur.execute("""INSERT INTO pending_users (full_name, email, password_hash, salt, user_type, profession, cities, years, job_duration, description, start_working, finish_working, verification_code, expires_at)
-                            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", (data["name"],data["email"], password_hash, salt, data["role"], data["profession"], cities, data["years"], data["jobDuration"], data["description"],data["startWorking"], data["finishWorking"], ver.verification_code, ver.expires_at))
-                        conn.commit()
-            if not ver.send_verification_code():
-                cur.execute("""DELETE FROM pending_users WHERE email=?""",(data["email"],))
+                
+                salt = os.urandom(16).hex()
+                password_hash = hash_password(data["password"], salt)
+                ver = EmailVerification(data["email"])
+                cities = ", ".join(data["cities"])
+                
+                cur.execute("""INSERT INTO pending_users (full_name, email, password_hash,
+                            salt, user_type, profession, cities, years, job_duration, description, start_working, 
+                            finish_working, verification_code, expires_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", 
+                            (data["name"],data["email"], password_hash, salt, data["role"], data["profession"], 
+                            cities, data["years"], data["jobDuration"], data["description"],data["startWorking"], 
+                            data["finishWorking"], ver.verification_code, ver.expires_at))
+                       
+                if not ver.send_verification_code():
+                    conn.rollback()
+                    return False, {StatusMessage.FAILED_SIGN_UP.value: "Failed to send verification email. Check email field"}
+            
                 conn.commit()
-                return False, {StatusMessage.FAILED_SIGN_UP.value:"Failed to send verification email.\nCheck email field"}     
-            return True, {MessageTypes.VERIFICATION.value:"Sending verification"}
+                return True, {MessageTypes.VERIFICATION.value: "Sending verification"}
         
+        except sqlite3.IntegrityError:
+            conn.rollback()
+            return False, {StatusMessage.FAILED_SIGN_UP.value: "Email already in use"}
+
         except Exception as e:
-            print("User sign up service - ",e)
-            return False, {StatusMessage.FAILED_SIGN_UP.value:"Not all fields were"}    
-        finally:
-            conn.close()
-    
+            conn.rollback()
+            print("Freelancer sign up service -", e)
+            return False, {StatusMessage.FAILED_SIGN_UP.value: "Not all fields were valid"}
+        
     
 
+    
     
 class VerificationDispatcher(MessageHandler):
     def handle(self, msg:Message) -> tuple:
@@ -279,19 +284,24 @@ class VerificationDispatcher(MessageHandler):
     def log_new_customer(self, msg:Message) -> bool:
         try:
             with sqlite3.connect(DATABASE) as conn:
+                conn.execute("BEGIN")
                 cur = conn.cursor()
+                
                 data = msg.data
                 email = data["email"]
                 role = data["role"]
                 
                 if role == "User":
                     cur.execute("SELECT full_name, password_hash, salt, user_type FROM pending_users WHERE email=?", (email,))
-                    name, password_hash, salt, user_type = cur.fetchone()
-                    cur.execute("DELETE FROM pending_users WHERE email=?", (email,))
+                    row = cur.fetchone()
+                    if not row:
+                        conn.rollback()
+                        return False
+                    
+                    name, password_hash, salt, user_type = row
+                    
                     cur.execute("""INSERT INTO users (full_name, email, password_hash, user_type, salt) 
                                 VALUES (?,?,?,?,?)""", (name, email, password_hash, user_type, salt))
-                    conn.commit()
-                    return True
                 
                 elif role == "Freelancer":
                     cur.execute("""SELECT full_name, password_hash, salt, user_type, 
@@ -299,86 +309,84 @@ class VerificationDispatcher(MessageHandler):
                                 start_working, finish_working 
                                 FROM pending_users 
                                 WHERE email=?""",(email,))
-                    (name,
-                     password_hash, 
-                     salt, user_type, 
-                     profession, cities, 
-                     years, job_duration, 
-                     description, 
-                     start_working, 
-                     finish_working) = cur.fetchone()
+                    row = cur.fetchone()
+                    if not row:
+                        conn.rollback()
+                        return False
                     
-                    cur.execute("DELETE FROM pending_users WHERE email=?", (email,))
+                    (name, password_hash, salt, user_type, profession, cities, 
+                     years, job_duration, description, start_working, finish_working) = row
+
                     cur.execute("""INSERT INTO users (full_name, email, password_hash, user_type, salt) 
                                 VALUES (?,?,?,?,?)""", (name, email, password_hash, user_type, salt))
-                    conn.commit()
-                    
-                    cur.execute("SELECT id FROM users WHERE email=?",(email,))
-                    id = cur.fetchone()[0]
+                    id = cur.lastrowid
                     
                     cur.execute("""INSERT INTO professional (user_id, profession, service_cities,
                                 description, years_experience, avg_job_duration, start_time, end_time)
                                 VALUES (?,?,?,?,?,?,?,?)""", (id, profession, cities, description, years, job_duration, start_working, finish_working))
-                    conn.commit()
-                    return True
+                
+                cur.execute("DELETE FROM pending_users WHERE email=?",(email,))
+                conn.commit()
+                return True
                     
-        except Exception as e:
-            print("Verification dispatcher, logging customer - ", e)
+        except sqlite3.IntegrityError:
+            conn.rollback()
             return False
+
+        except Exception as e:
+            conn.rollback()
+            print("Verification dispatcher, logging customer -", e)
+            return False
+            
         
-        finally:
-            conn.close()
-        
-        
+
 
         
 class ForgotPasswordEmailVerifciationDispatcher(MessageHandler):
     def handle(self, msg:Message) ->tuple:
         try:
             with sqlite3.connect(DATABASE) as conn:
+                conn.execute("BEGIN")
                 email = msg.data["email"]
-            
                 cur = conn.cursor()
-                cur.execute("SELECT * FROM users WHERE email=?", (email,))
-                user = cur.fetchone()
-                if not user:
+                
+                cur.execute("SELECT 1 FROM users WHERE email=?", (email,))
+                if not cur.fetchone():
                     return MessageTypes.FORGOT_PASSWORD_REQUEST, StatusMessage.FORGOT_PASSWORD_BAD.value
                 
                 
                 cur.execute("SELECT expires_at FROM pending_users WHERE email=?", (email,))
-                find =cur.fetchone()
                 
+                find =cur.fetchone()
                 if find:
-                    expires_at = datetime.strptime(find[0], "%Y-%m-%d %H:%M:%S.%f")
                     
+                    expires_at = datetime.strptime(find[0], "%Y-%m-%d %H:%M:%S.%f")
                     if expires_at<datetime.now():
                         cur.execute("DELETE FROM pending_users WHERE email=?", (email,))
-                        conn.commit()
-                        ver = EmailVerification(email)
-                        if ver.send_verification_code():
-                            cur.execute("""INSERT INTO pending_users (full_name, email, password_hash, salt, user_type, verification_code, expires_at)
-                                        VALUES (?,?,?,?,?,?,?)""", ("", email, "", "", "User",ver.verification_code, ver.expires_at ))
-                            conn.commit()
-                            return MessageTypes.FORGOT_PASSWORD_REQUEST, StatusMessage.FORGOT_PASSWORD_GOOD.value
-                    
                     else:
-                        cur.execute("DELETE FROM pending_users WHERE email=?", (email,))
-                        conn.commit()
                         return MessageTypes.FORGOT_PASSWORD_REQUEST, StatusMessage.FORGOT_PASSWORD_BAD.value 
                 
-                else:
-                    ver = EmailVerification(email)
-                    if ver.send_verification_code():
-                        cur.execute("""INSERT INTO pending_users (full_name, email, password_hash, salt, user_type, verification_code, expires_at)
-                                    VALUES (?,?,?,?,?,?,?)""", ("", email, "", "", "User",ver.verification_code, ver.expires_at ))
-                        conn.commit()
-                        return MessageTypes.FORGOT_PASSWORD_REQUEST, StatusMessage.FORGOT_PASSWORD_GOOD.value
-        
+                ver = EmailVerification(email)
+                
+                if not ver.send_verification_code():
+                    conn.rollback()
+                    return MessageTypes.FORGOT_PASSWORD_REQUEST, StatusMessage.FORGOT_PASSWORD_BAD.value
+                
+                cur.execute("""
+                    INSERT INTO pending_users 
+                    (full_name, email, password_hash, salt, user_type, verification_code, expires_at)
+                    VALUES (?,?,?,?,?,?,?)
+                """, ("", email, "", "", "User", ver.verification_code, ver.expires_at))
+                
+                
+                conn.commit()
+                return MessageTypes.FORGOT_PASSWORD_REQUEST, StatusMessage.FORGOT_PASSWORD_GOOD.value
+                
         except Exception as e:
+            conn.rollback()
             print("Forgot Password Dispatcher - ",e)
             return MessageTypes.FORGOT_PASSWORD_REQUEST, StatusMessage.FORGOT_PASSWORD_BAD.value
-        finally:
-            conn.close()
+
 
 
 
@@ -387,6 +395,7 @@ class ForgotPasswordAuthenticationDispatcher(MessageHandler):
     def handle(self, msg:Message) ->tuple:
         try:
             with sqlite3.connect(DATABASE) as conn:
+                conn.execute("BEGIN")
                 cur = conn.cursor()
                 email = msg.data["email"]
                 ver_code = msg.data["veri_code"]
@@ -397,7 +406,7 @@ class ForgotPasswordAuthenticationDispatcher(MessageHandler):
                 if not pending:
                     return MessageTypes.FORGOT_PASSWORD_AUTHENTICATION, StatusMessage.FORGOT_PASSWORD_BAD.value
                 
-                cur.execute("SELECT * FROM users WHERE email=?",(email,))
+                cur.execute("SELECT 1 FROM users WHERE email=?",(email,))
                 user = cur.fetchone()
                 if not user:
                     return MessageTypes.FORGOT_PASSWORD_AUTHENTICATION, StatusMessage.FORGOT_PASSWORD_BAD.value
@@ -421,10 +430,10 @@ class ForgotPasswordAuthenticationDispatcher(MessageHandler):
                 
                 
         except Exception as e:
+            conn.rollback()
             print("Forgot password authentication dispatcher - ", e)
             return MessageTypes.FORGOT_PASSWORD_AUTHENTICATION, StatusMessage.FORGOT_PASSWORD_BAD.value
-        finally:
-            conn.close()
+
 
 
 
@@ -433,11 +442,12 @@ class UpdatePasswordDispatcher(MessageHandler):
     def handle(self, msg:Message) ->tuple:
         try:
             with sqlite3.connect(DATABASE) as conn:
+                conn.execute("BEGIN")
                 cur = conn.cursor()
                 email = msg.data["email"]
                 password = msg.data["password"]
                 
-                cur.execute("""SELECT email FROM pass_change WHERE email=?""", (email,))
+                cur.execute("""SELECT 1 FROM pass_change WHERE email=?""", (email,))
                 user = cur.fetchone()
                 
                 if not user:
@@ -453,10 +463,9 @@ class UpdatePasswordDispatcher(MessageHandler):
         
         
         except Exception as e:
+            conn.rollback()
             print("Update password dispatcher - ", e)
             return MessageTypes.CHANGE_PASS, StatusMessage.CHANGE_PASSWORD_BAD.value
-        finally:
-            conn.close()
 
 #endregion
     
@@ -629,13 +638,8 @@ class EmailVerification:
                         cur.execute("""DELETE FROM pending_users WHERE email=?""", (email,))    
                         conn.commit()
                         return False, {StatusMessage.VERIFICATION_BAD.value:"Verification time expired, restart the process"}
-                    
-                    try:
-                        int(veri_code)
-                    except:
-                        return False, {StatusMessage.VERIFICATION_BAD.value:"Verification code bad format"} 
-                    
-                    if int(veri_code_fetched) == int(veri_code):
+
+                    if veri_code_fetched == veri_code:
                         return True, {StatusMessage.VERIFICATION_GOOD.value:""}
                     
                     else:
@@ -645,25 +649,21 @@ class EmailVerification:
         except Exception as e:
             print (f"Verification code check - {e}")
             return False, {StatusMessage.VERIFICATION_BAD.value:"Not all fields were sent"}
-        
-        finally:
-            conn.close()
-
 
 
 with sqlite3.connect(DATABASE) as conn:
     cur = conn.cursor()
-#     salt = os.urandom(16).hex()
-#     password_hash = hash_password("111", salt)
-#     cur.execute("""INSERT INTO users (full_name, email, password_hash, user_type, salt)
-#                 VALUES (?,?,?,?,?)""", ("Ido Yaffet", "idoy90@gmail.com", password_hash, "User", salt))
-#     conn.commit()
+# #     salt = os.urandom(16).hex()
+# #     password_hash = hash_password("111", salt)
+# #     cur.execute("""INSERT INTO users (full_name, email, password_hash, user_type, salt)
+# #                 VALUES (?,?,?,?,?)""", ("Ido Yaffet", "idoy90@gmail.com", password_hash, "User", salt))
+# #     conn.commit()
     
-#     cur.execute("SELECT * FROM users")
-#     print(cur.fetchall())
-
-    # cur.execute("SELECT * FROM users")
-    # print(cur.fetchall())
+# #     cur.execute("SELECT * FROM users")
+# #     print(cur.fetchall())
     
-    # cur.execute("DELETE FROM pass_change WHERE email='yaffetsterno@gmail.com'")
+    # cur.execute("DELETE FROM users WHERE email='yaffetsterno@gmail.com'")
     # conn.commit()
+    
+    cur.execute("SELECT * FROM users")
+    print(cur.fetchall())

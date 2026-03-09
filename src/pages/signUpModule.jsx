@@ -43,7 +43,7 @@ export function BackToLogin()
   return(
     <Link
       to="/login"
-      className="absolute top-4 left-4 bg-white text-blue-500 px-4 py-2 rounded-lg shadow hover:bg-blue-50 transition"
+      className="absolute top-4 left-4 bg-slate-900 text-blue-500 px-4 py-2 rounded-lg shadow hover:bg-slate-600 transition"
     >
       ← Back to Login
     </Link>
@@ -53,7 +53,7 @@ export function BackToLogin()
 
 export function ErrorMessage({message}){
     return (
-        <p className="text-red-500 font-bold text-base mt-1">
+        <p className="text-red-600 font-bold text-base mt-1">
             {message}
         </p>
     )
@@ -71,7 +71,7 @@ export function InputField({ label, type="text", name, value, onChange, placehol
         value={value || ""}
         onChange={onChange}
         placeholder={placeholder}
-        className="border border-blue-400 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-400"
+        className="border text-gray-300 bg-slate-700 border-blue-400 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-400"
       />
     </div>
   );
@@ -96,10 +96,29 @@ export function SingleChoiceDropDownMenu({label, name, options, value, onChange,
         value = {value ? {value:value, label:value}:null}
         onChange ={(selected) => onChange(selected.value)}
         placeholder={placeholder}
-        styles={{ container: (base) => ({ ...base, width: customWidth || '100%' }) }}
         classNamePrefix = 'react-select'
         menuPlacement = "auto"
         maxMenuHeight={200}
+        styles={{
+                container: (base) => ({ ...base, width: customWidth || '100%' }),
+                control: (base, state) => ({
+                  ...base,
+                  backgroundColor: '#374151',
+                  borderColor: '#60a5fa',
+                  boxShadow: state.isFocused ? '0 0 0 2px #60a5fa' : 'none',
+                  color: '#ffffff',
+                  '&:hover': { borderColor: '#3b82f6' },
+                }),
+                menu: (base) => ({ ...base, backgroundColor: '#374151', color: '#ffffff' }),
+                option: (base, state) => ({
+                  ...base,
+                  backgroundColor: state.isFocused ? '#1e293b' : '#374151',
+                  color: '#ffffff',
+                }),
+                singleValue: (base) => ({ ...base, color: '#ffffff' }),
+                placeholder: (base) => ({ ...base, color: '#cbd5e1' }),
+                input: (base) => ({ ...base, color: '#d1d5db' })
+              }}
       />
     </div>
   )
@@ -120,11 +139,54 @@ export function MultiChoiceDropDownMenu({label, name, options, value, onChange, 
         value = {formattedValue}
         onChange ={(selected) => {const selectedValue = selected ? selected.map(s => s.value) : []; onChange(selectedValue)}}
         placeholder={placeholder}
-        styles={{ container: (base) => ({ ...base, width: customWidth || '100%' }) }}
         classNamePrefix = 'react-select'
         menuPlacement = "auto"
         maxMenuHeight={200}
         isMulti ={true}
+        styles={{
+                container: (base) => ({ ...base, width: customWidth || '100%' }),
+                control: (base, state) => ({
+                  ...base,
+                  backgroundColor: '#374151',
+                  borderColor: '#60a5fa', 
+                  boxShadow: state.isFocused
+                    ? '0 0 0 2px #60a5fa'
+                    : 'none',
+                  color: '#ffffff',
+                  '&:hover': {
+                    borderColor: '#3b82f6',
+                  },
+                }),
+                menu: (base) => ({
+                  ...base,
+                  backgroundColor: '#374151',
+                  color: '#ffffff',
+                }),
+                option: (base, state) => ({
+                  ...base,
+                  backgroundColor: state.isFocused ? '#1e293b' : '#374151',
+                  color: '#ffffff',
+                }),
+                multiValue: (base) => ({
+                  ...base,
+                  backgroundColor: '#1e293b',
+                  color: '#ffffff',
+                }),
+                multiValueLabel: (base) => ({
+                  ...base,
+                  color: '#ffffff',
+                }),
+                multiValueRemove: (base) => ({
+                  ...base,
+                  color: '#ffffff',
+                  ':hover': {
+                    backgroundColor: '#3b82f6',
+                    color: '#ffffff',
+                  },
+                }),
+                singleValue: (base) => ({ ...base, color: '#ffffff' }),
+                placeholder: (base) => ({ ...base, color: '#cbd5e1' }),
+              }}
       />
     </div>
   )
@@ -135,11 +197,11 @@ export function MultiChoiceDropDownMenu({label, name, options, value, onChange, 
 //#region page components
 export function RolePopup({ onSelect }) {
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-yellow-100 w-full min-h-screen">
+    <div className="fixed inset-0 flex items-center justify-center bg-slate-900 w-full min-h-screen">
       <BackToLogin/>
 
-      <div className="bg-white p-8 rounded-xl shadow-lg w-80 text-center">
-        <h2 className="text-lg font-semibold text-gray-800 mb-6">
+      <div className="bg-slate-700 p-8 rounded-xl shadow-lg w-80 text-center">
+        <h2 className="text-lg font-semibold text-gray-300 mb-6">
           Hey! Please pick how you would like to be presented in Pro-Find
         </h2>
 
@@ -206,15 +268,15 @@ export function EmailVerification({ verificationCode, setVerificationCode, handl
   }
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-yellow-100 w-full min-h-screen p-4">
+    <div className="fixed inset-0 flex items-center justify-center bg-slate-900 w-full min-h-screen p-4">
       
-      <div className="bg-white p-10 rounded-xl shadow-lg w-full max-w-md text-center">
+      <div className="bg-slate-700 p-10 rounded-xl shadow-lg w-full max-w-md text-center">
 
-        <h2 className="text-4xl font-semibold text-gray-800 mb-2">
+        <h2 className="text-4xl font-semibold text-gray-300  mb-2">
           Insert Verification Code
         </h2>
 
-        <p className="text-gray-600 mb-6">
+        <p className="text-gray-400 mb-6">
           A verification code was sent to your email.
         </p>
 
@@ -228,7 +290,7 @@ export function EmailVerification({ verificationCode, setVerificationCode, handl
               value={verificationCode[i] || ""}
               onChange={(e) => handleChange(e.target.value, i)}
               onKeyDown={(e) => handleKeyDown(e, i)}
-              className="w-14 h-16 text-center text-3xl border-b-4 border-blue-400 focus:border-blue-500 outline-none rounded-sm flex items-center justify-center"
+              className="w-14 h-16 text-center text-white text-3xl border-b-4 border-blue-400 focus:border-blue-500 outline-none rounded-sm flex items-center justify-center"
             />
           ))}
         </div>

@@ -17,12 +17,12 @@ function ForgotPassword({goBack, ws, email, setEmail, errorMessage}){
 
 
     return(
-        <div className="fixed inset-0 flex items-center justify-center bg-yellow-100 w-full min-h-screen">
-            <div className="bg-white p-10 rounded-xl shadow-md w-96 text-center">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">
+        <div className="fixed inset-0 flex items-center justify-center bg-slate-900 w-full min-h-screen">
+            <div className="bg-slate-700 p-10 rounded-xl shadow-md w-96 text-center">
+                <h2 className="text-2xl font-bold text-gray-300 mb-4">
                     Forgot Password
                 </h2>
-                <p className="text-gray-600 text-sm mb-6">
+                <p className="text-gray-300 text-sm mb-6">
                     Enter your email and we will send a verification code so you can reset your password.
                 </p>
                 <form className="flex flex-col items-center space-y-4" onSubmit={(e)=>{e.preventDefault();setAttempted(true); ForgotPasswordVerificationCodeRequest(ws, email);}}
@@ -70,12 +70,12 @@ function ChangePassword({changePasswordRequest, password, setPassword }) {
     };
 
     return (
-        <div className="fixed inset-0 flex items-center justify-center bg-yellow-100 w-full min-h-screen">
-            <div className="bg-white p-10 rounded-xl shadow-md w-96 text-center">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">
+        <div className="fixed inset-0 flex items-center justify-center bg-slate-900 w-full min-h-screen">
+            <div className="bg-slate-700 p-10 rounded-xl shadow-md w-96 text-center">
+                <h2 className="text-2xl font-bold text-gray-300 mb-4">
                     Change Password
                 </h2>
-                <p className="text-gray-600 text-sm mb-6">
+                <p className="text-gray-300 text-sm mb-6">
                     Enter your new password and confirm it.
                 </p>
 
@@ -109,7 +109,7 @@ function ChangePassword({changePasswordRequest, password, setPassword }) {
 }
 
 
-export default function LogIn(payload){
+    export default function LogIn(payload){
     const ws = useSocket();
     const navigate = useNavigate()
     const dispatch = useDispatch()
@@ -190,9 +190,9 @@ export default function LogIn(payload){
     if (showChangePass)
         return <ChangePassword changePasswordRequest={handleChangePassword} password={pass} setPassword={setPass} />
     return(
-        <div className="fixed inset-0 flex items-center justify-center bg-yellow-100 w-full min-h-screen">
-        <div className="bg-white p-10 rounded-xl shadow-md w-96 text-center">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Login</h2>
+        <div className="fixed inset-0 flex items-center justify-center bg-slate-900 w-full min-h-screen">
+        <div className="bg-slate-700 p-10 rounded-xl shadow-md w-96 text-center">
+        <h2 className="text-2xl font-bold text-gray-300 mb-4">Login</h2>
 
         <form className="flex flex-col items-center space-y-4"   onSubmit={(e) => {
             e.preventDefault();

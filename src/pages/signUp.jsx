@@ -6,6 +6,7 @@ import { SignUpRequest, VerificationRequest } from "../socket/RequestHandler";
 import webSocketParser from "../socket/MsgParser";
 import { handleSignUpResponse, handleVerificationReponse } from "../socket/ResponseHandlers";
 import { MessageTypes } from "../socket/MsgTypes";
+
 function UserSignUp({ userInfo, setUserInfo, onSubmit, serverError }){
   const [confirmPassword, setConfirmPassword] = useState("")
   const [passwordMismatch, setPasswordMismatch] = useState(false)
@@ -44,10 +45,10 @@ function UserSignUp({ userInfo, setUserInfo, onSubmit, serverError }){
   }
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-yellow-100 w-full min-h-screen">
+    <div className="fixed inset-0 flex items-center justify-center bg-slate-900 w-full min-h-screen">
       <BackToLogin/>
-      <div className="bg-white p-12 rounded-xl shadow-lg w-120 text-center">
-        <h1 className="text-2xl font-bold mb-4">
+      <div className="bg-slate-700 p-12 rounded-xl shadow-lg w-120 text-center">
+        <h1 className="text-gray-300 text-2xl font-bold mb-4">
             Please enter your information below
         </h1>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
@@ -198,13 +199,13 @@ Self description - ${freelancerInfo.description }
 
     
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-yellow-100 w-full min-h-screen">
+      <div className="fixed inset-0 flex items-center justify-center bg-slate-900 w-full min-h-screen">
         <BackToLogin/>
-        <div className="bg-white p-8 rounded-xl shadow-lg w-140 max-h-[90vh] overflow-y-auto text-center scrollbar-hide">
-         <h1 className="text-xl font-bold mb-4">
+        <div className="bg-slate-600 p-8 rounded-xl shadow-lg w-140 max-h-[90vh] overflow-y-auto text-center scrollbar-hide">
+         <h1 className="text-gray-300 text-xl font-bold mb-4">
             Please enter your information below
           </h1>
-          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+          <form className="text-gray-300 flex flex-col gap-4" onSubmit={handleSubmit}>
             <InputField name={"name"} value={freelancerInfo.name} onChange={handleChange} placeholder={"Username"}/>
             
             <InputField name={"email"} value={freelancerInfo.email} onChange={handleChange} placeholder={"Email"} type={"email"}/>

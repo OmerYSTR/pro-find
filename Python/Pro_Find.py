@@ -5,11 +5,30 @@ import MessageHandler
 import json
 from collections import deque
 import time
+import sqlite3
 MAX_MESSAGES = 5
 TIME_WINDOW = 20 
 
 
 dispacher = MessageHandler.configure_dispatcher()
+DATABASE = r"C:\Coding\pro-find\Python\my_app.db"
+
+def cleanup_expired_user():
+    while True:
+        try:
+            with sqlite3.connect(DATABASE) as conn:
+                cur = conn.cursor()
+                
+                cur.execute("""DELETE FROM pending_users WHERE expires_at IS NOT NULL AND expires_at<=CURRENT_TIMESTAMP""")
+                delete = cur.rowcount
+                
+                conn.commit()
+                if delete:
+                    print(f"Cleanup deleted {delete} expired pending users")
+        except Exception as e:
+            print("Cleanup error - ", e)
+           
+        time.sleep(3600) 
 
 
 def handle_client(soc: socket.socket):
@@ -60,6 +79,10 @@ if __name__ == "__main__":
     srv = socket.socket()
     srv.bind(("0.0.0.0", 1111))
     srv.listen(10)
+    
+    cleanup_thread = threading.Thread(target=cleanup_expired_user, daemon=True)
+    cleanup_thread.start()
+    
     main_thread(srv)
     
     
