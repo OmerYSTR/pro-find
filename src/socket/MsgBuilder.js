@@ -1,4 +1,4 @@
-export default function MsgBuild(type, payload, type_of_data){
+export default function MsgBuild(type, payload, type_of_data="JSON"){
     const my_dict = {
         "type": type,
         "data": payload,
