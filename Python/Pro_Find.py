@@ -38,9 +38,7 @@ def handle_client(soc: socket.socket):
 
     while True:
         try:
-            now = time.time()
-            
-            while message_times and now - message_times[0] > TIME_WINDOW:
+            while message_times and time.time() - message_times[0] > TIME_WINDOW:
                 message_times.popleft()
 
             if len(message_times) >= MAX_MESSAGES:
@@ -50,7 +48,7 @@ def handle_client(soc: socket.socket):
             
             payload = My_WebSocket.recv_message(clt_soc)
             
-            message_times.append(now)
+            message_times.append(time.time())
             
             msg = MessageHandler.Message(payload)
         except:
@@ -62,6 +60,7 @@ def handle_client(soc: socket.socket):
         My_WebSocket.send_message(
             clt_soc,
             handler_type,
+            msg.token,
             to_send,
             True if len(json.dumps(to_send)) > 1000 else False
         )

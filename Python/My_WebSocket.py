@@ -322,7 +322,7 @@ def accept_websocket_upgrade_request_from_client(clt_soc:socket.socket):
         
         
         
-def build_proper_json_payload(type:MessageTypes, payload):
+def build_proper_json_payload(type:MessageTypes, payload, token):
     type_of_message = type.value
     type_of_data = "JSON"
 
@@ -339,13 +339,14 @@ def build_proper_json_payload(type:MessageTypes, payload):
     return {
         "type": type_of_message,
         "data": safe_payload,
-        "data_type": type_of_data
+        "data_type": type_of_data,
+        "token":token
     }
 
 
-def send_message(clt: socket.socket, type, msg=None, to_split_message=None, opcode:WebSocketOpcodes=WebSocketOpcodes.TEXT):
+def send_message(clt: socket.socket, type, token, msg=None, to_split_message=None, opcode:WebSocketOpcodes=WebSocketOpcodes.TEXT):
     try:
-        msg_dict = build_proper_json_payload(type, msg) if msg is not None else None
+        msg_dict = build_proper_json_payload(type, msg, token) if msg is not None else None
 
         msg_to_send = json.dumps(msg_dict)
         

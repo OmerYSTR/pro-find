@@ -1,6 +1,7 @@
 from enum import Enum
 
 class MessageTypes(Enum):
+    BROAD = "BRD"
     LOGIN = "LOGIN"
     USER_SIGNUP = "USERSIGNUP"
     FREELANCER_SIGNUP ="FRLNCSIGNUP"
@@ -20,6 +21,8 @@ class MessageTypes(Enum):
     PROFESSIONAL_FILTER= 'PRO_FILTER'
     
 class StatusMessage(Enum):
+    TOKEN_BAD = "BAD_TKN"
+    
     LOGGED_IN = "LOGGED"
     FAILED_LOG_IN = "FAILED_LOG"
     

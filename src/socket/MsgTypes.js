@@ -1,4 +1,5 @@
 export const MessageTypes = Object.freeze({
+  BROAD:"BRD",
   LOGIN: "LOGIN",
   USER_SIGNUP: "USERSIGNUP",
   FREELANCER_SIGNUP:"FRLNCSIGNUP",
@@ -20,6 +21,8 @@ export const MessageTypes = Object.freeze({
 
 
 export const StatusMessage = Object.freeze({
+    TOKEN_BAD:"BAD_TKN",
+  
     LOGGED_IN: "LOGGED",
     FAILED_LOG_IN: "FAILED_LOG",
 

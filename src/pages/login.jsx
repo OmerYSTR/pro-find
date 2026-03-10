@@ -114,10 +114,8 @@ function ChangePassword({changePasswordRequest, password, setPassword }) {
     const navigate = useNavigate()
     const dispatch = useDispatch()
     
-    const [attempted, setAttempted] = useState(false)
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    const [loginWorked, setLoginWorked] = useState(false)
 
     const [forgotPassword, setForgotPassword] = useState(false)
     
@@ -150,30 +148,32 @@ function ChangePassword({changePasswordRequest, password, setPassword }) {
             const info = webSocketParser(event.data)
             console.log(`type - ${info.type}\ndata - ${info.data}`)
             if (info.type == MessageTypes.LOGIN){
-                setAttempted(true)
-                const loggedIn = handleLoginResponse(info, dispatch);
-                setLoginWorked(loggedIn)
+                const [loggedIn, message] = handleLoginResponse(info, dispatch);
                 if (loggedIn){
                     navigate("/")
+                }
+                else{
+                    setServerError(message)
                 }}
-
+            
             else if(info.type == MessageTypes.FORGOT_PASSWORD_REQUEST){
-                const veri_sent = handleForgotPasswordVerificationCodeResponse(info)
+                const [veri_sent, message] = handleForgotPasswordVerificationCodeResponse(info)
                 if (veri_sent){setShowVerification(true); setForgotPassword(false);
-                }else setServerError("Error in verifying your email")}
+                }else setServerError(message)}
 
             else if(info.type == MessageTypes.FORGOT_PASSWORD_AUTHENTICATION){
-                const veri_sent = handleForgotPasswordVerifyCodeResponse(info)
+                const [veri_sent,message] = handleForgotPasswordVerifyCodeResponse(info)
                 if (veri_sent){setShowVerification(false); setShowChangePass(true)}
-                else setServerError("Error verifying email")
+                else setServerError(message)
             }
 
             else if (info.type ==MessageTypes.CHANGE_PASS){
-                const pass_accepted = handleChangePasswordResponse(info)
+                const [pass_accepted, message] = handleChangePasswordResponse(info)
                 if (pass_accepted){
-                    navigate("/")
+                    setForgotPassword(false)
+                    setShowChangePass(false)
                 }
-                else setServerError("Error verifying password")
+                else setServerError(message)
             }
         }
 
@@ -196,7 +196,6 @@ function ChangePassword({changePasswordRequest, password, setPassword }) {
 
         <form className="flex flex-col items-center space-y-4"   onSubmit={(e) => {
             e.preventDefault();
-            setAttempted(true);
             LoginRequest(username, password, ws);
         }}>
             <div className='w-full'>    
@@ -207,8 +206,8 @@ function ChangePassword({changePasswordRequest, password, setPassword }) {
                 <InputField type={"password"} name={"password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder={"Password"} />
             </div>
             
-            {!loginWorked && attempted && (
-                <ErrorMessage message={"One or more of the credentials is incorrect"} />
+            {serverError && (
+                <ErrorMessage message={serverError} />
             )}
 
             <button

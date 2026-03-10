@@ -371,7 +371,7 @@ export default function SignUpPage() {
   const handleSignUpPageSubmit = () => {
     setServerError("")
     if (role === "User")
-      SignUpRequest(ws, userInfo, role);
+      SignUpRequest(ws, userInfo,"", role);
     else if (role === "Freelancer")
       SignUpRequest(ws, freelancerInfo, role);
   }

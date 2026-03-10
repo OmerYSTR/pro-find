@@ -17,7 +17,7 @@ customer
 
 
 +----------------------------+
-|      professionals         |
+|      professional          |
 +----------------------------+
 | PK id                      |
 | FK user_id → USERS.id      |

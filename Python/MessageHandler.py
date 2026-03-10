@@ -5,11 +5,12 @@ from message_types import MessageTypes, StatusMessage
 from abc import ABC, abstractmethod
 import re
 from datetime import datetime, timedelta
-
 import random
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from token_handler import is_token_valid
+
 #region Consts
 DATABASE = r"C:\Coding\pro-find\Python\my_app.db"
 PEPPER = "CYBERISH"
@@ -41,6 +42,7 @@ class Message:
     def __init__(self, payload):
         self.type_of = payload["type"]
         self.data = payload["data"]
+        self.token = payload["token"]
         
         
         
@@ -91,7 +93,6 @@ def configure_dispatcher() -> MessageDispatcher:
 class LoginDispatcher(MessageHandler):
     def handle(self, msg:Message) -> tuple:
         try:
-            to_ret = MessageTypes.LOGIN, StatusMessage.FAILED_LOG_IN.value
 
             email = msg.data["email"]
             password = msg.data["password"]
@@ -105,12 +106,13 @@ class LoginDispatcher(MessageHandler):
                     db_password, salt = data   
                     hashed_ps = hash_password(password, salt)
                     if db_password == hashed_ps:
-                        return MessageTypes.LOGIN, StatusMessage.LOGGED_IN.value
-                return to_ret
+                        return MessageTypes.LOGIN, {StatusMessage.LOGGED_IN.value:""}
+                return MessageTypes.LOGIN, {StatusMessage.FAILED_LOG_IN.value:"Email or password incorrect"}
         
         except Exception as e:
             print("Login dispatcher - ", e)
-            return to_ret
+            return MessageTypes.LOGIN, {StatusMessage.FAILED_LOG_IN.value:"Client error"}
+        
     
     
     
@@ -352,7 +354,7 @@ class ForgotPasswordEmailVerifciationDispatcher(MessageHandler):
                 
                 cur.execute("SELECT 1 FROM users WHERE email=?", (email,))
                 if not cur.fetchone():
-                    return MessageTypes.FORGOT_PASSWORD_REQUEST, StatusMessage.FORGOT_PASSWORD_BAD.value
+                    return MessageTypes.FORGOT_PASSWORD_REQUEST, {StatusMessage.FORGOT_PASSWORD_BAD.value:"Email not in system"}
                 
                 
                 cur.execute("SELECT expires_at FROM pending_users WHERE email=?", (email,))
@@ -364,13 +366,13 @@ class ForgotPasswordEmailVerifciationDispatcher(MessageHandler):
                     if expires_at<datetime.now():
                         cur.execute("DELETE FROM pending_users WHERE email=?", (email,))
                     else:
-                        return MessageTypes.FORGOT_PASSWORD_REQUEST, StatusMessage.FORGOT_PASSWORD_BAD.value 
+                        return MessageTypes.FORGOT_PASSWORD_REQUEST, {StatusMessage.FORGOT_PASSWORD_BAD.value:"Expired verification time"} 
                 
                 ver = EmailVerification(email)
                 
                 if not ver.send_verification_code():
                     conn.rollback()
-                    return MessageTypes.FORGOT_PASSWORD_REQUEST, StatusMessage.FORGOT_PASSWORD_BAD.value
+                    return MessageTypes.FORGOT_PASSWORD_REQUEST, {StatusMessage.FORGOT_PASSWORD_BAD.value:"Error sending verification email\ntry again at a later time"}
                 
                 cur.execute("""
                     INSERT INTO pending_users 
@@ -380,12 +382,12 @@ class ForgotPasswordEmailVerifciationDispatcher(MessageHandler):
                 
                 
                 conn.commit()
-                return MessageTypes.FORGOT_PASSWORD_REQUEST, StatusMessage.FORGOT_PASSWORD_GOOD.value
+                return MessageTypes.FORGOT_PASSWORD_REQUEST, {StatusMessage.FORGOT_PASSWORD_GOOD.value:""}
                 
         except Exception as e:
             conn.rollback()
             print("Forgot Password Dispatcher - ",e)
-            return MessageTypes.FORGOT_PASSWORD_REQUEST, StatusMessage.FORGOT_PASSWORD_BAD.value
+            return MessageTypes.FORGOT_PASSWORD_REQUEST, {StatusMessage.FORGOT_PASSWORD_BAD.value:"Client error"}
 
 
 
@@ -404,27 +406,27 @@ class ForgotPasswordAuthenticationDispatcher(MessageHandler):
                 pending = cur.fetchone()
 
                 if not pending:
-                    return MessageTypes.FORGOT_PASSWORD_AUTHENTICATION, StatusMessage.FORGOT_PASSWORD_BAD.value
+                    return MessageTypes.FORGOT_PASSWORD_AUTHENTICATION, {StatusMessage.FORGOT_PASSWORD_BAD.value:"Email is not verifying"}
                 
                 cur.execute("SELECT 1 FROM users WHERE email=?",(email,))
                 user = cur.fetchone()
                 if not user:
-                    return MessageTypes.FORGOT_PASSWORD_AUTHENTICATION, StatusMessage.FORGOT_PASSWORD_BAD.value
+                    return MessageTypes.FORGOT_PASSWORD_AUTHENTICATION, {StatusMessage.FORGOT_PASSWORD_BAD.value:"No such user in system"}
                 
                 
                 expires_at =  datetime.strptime(pending[1], "%Y-%m-%d %H:%M:%S.%f")
                 if expires_at<datetime.now():
                     cur.execute("""DELETE FROM pending_users WHERE email=?""", (email,))
                     conn.commit()
-                    return MessageTypes.FORGOT_PASSWORD_AUTHENTICATION, StatusMessage.FORGOT_PASSWORD_BAD.value
+                    return MessageTypes.FORGOT_PASSWORD_AUTHENTICATION, {StatusMessage.FORGOT_PASSWORD_BAD.value:"Verification time finished"}
                 
                 if ver_code == pending[0]:
                     cur.execute("""DELETE FROM pending_users WHERE email=?""", (email,))
                     cur.execute("INSERT INTO pass_change (email) VALUES (?)", (email,))
                     conn.commit()
-                    return MessageTypes.FORGOT_PASSWORD_AUTHENTICATION, StatusMessage.FORGOT_PASSWORD_GOOD.value
+                    return MessageTypes.FORGOT_PASSWORD_AUTHENTICATION, {StatusMessage.FORGOT_PASSWORD_GOOD.value:""}
                 else:
-                    return MessageTypes.FORGOT_PASSWORD_AUTHENTICATION, StatusMessage.FORGOT_PASSWORD_BAD.value
+                    return MessageTypes.FORGOT_PASSWORD_AUTHENTICATION, {StatusMessage.FORGOT_PASSWORD_BAD.value:"Incorrect verification code"}
  
                 
                 
@@ -432,7 +434,7 @@ class ForgotPasswordAuthenticationDispatcher(MessageHandler):
         except Exception as e:
             conn.rollback()
             print("Forgot password authentication dispatcher - ", e)
-            return MessageTypes.FORGOT_PASSWORD_AUTHENTICATION, StatusMessage.FORGOT_PASSWORD_BAD.value
+            return MessageTypes.FORGOT_PASSWORD_AUTHENTICATION, {StatusMessage.FORGOT_PASSWORD_BAD.value:"Client error"}
 
 
 
@@ -451,7 +453,7 @@ class UpdatePasswordDispatcher(MessageHandler):
                 user = cur.fetchone()
                 
                 if not user:
-                    return MessageTypes.CHANGE_PASS, StatusMessage.CHANGE_PASSWORD_BAD.value
+                    return MessageTypes.CHANGE_PASS, {StatusMessage.CHANGE_PASSWORD_BAD.value:"User not changin password"}
                 
                 salt = os.urandom(16).hex()
                 password_hash = hash_password(password, salt)
@@ -459,13 +461,13 @@ class UpdatePasswordDispatcher(MessageHandler):
                 cur.execute(""" UPDATE users SET password_hash = ?, salt = ? WHERE email = ?""", (password_hash, salt, email))
                 cur.execute("""DELETE FROM pass_change WHERE email=?""", (email,))
                 conn.commit()
-                return MessageTypes.CHANGE_PASS, StatusMessage.CHANGE_PASSWORD_GOOD.value
+                return MessageTypes.CHANGE_PASS, {StatusMessage.CHANGE_PASSWORD_GOOD.value:""}
         
         
         except Exception as e:
             conn.rollback()
             print("Update password dispatcher - ", e)
-            return MessageTypes.CHANGE_PASS, StatusMessage.CHANGE_PASSWORD_BAD.value
+            return MessageTypes.CHANGE_PASS, {StatusMessage.CHANGE_PASSWORD_BAD.value:"Client error"}
 
 #endregion
     
@@ -651,6 +653,8 @@ class EmailVerification:
             return False, {StatusMessage.VERIFICATION_BAD.value:"Not all fields were sent"}
 
 
+
+#region table checks
 with sqlite3.connect(DATABASE) as conn:
     cur = conn.cursor()
 # #     salt = os.urandom(16).hex()
@@ -659,11 +663,12 @@ with sqlite3.connect(DATABASE) as conn:
 # #                 VALUES (?,?,?,?,?)""", ("Ido Yaffet", "idoy90@gmail.com", password_hash, "User", salt))
 # #     conn.commit()
     
-# #     cur.execute("SELECT * FROM users")
-# #     print(cur.fetchall())
+    # cur.execute("SELECT * FROM pass_change")
+    # print(cur.fetchall())
     
-    # cur.execute("DELETE FROM users WHERE email='yaffetsterno@gmail.com'")
+    # cur.execute("DELETE FROM users WHERE 1==1")
     # conn.commit()
     
-    cur.execute("SELECT * FROM users")
-    print(cur.fetchall())
+    # cur.execute("SELECT * FROM professional")
+    # print(cur.fetchall())
+#endregion

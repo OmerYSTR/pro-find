@@ -6,13 +6,13 @@ import StateManagedSelect from "react-select";
 //#region Login
 export const handleLoginResponse = (payload, dispatch) =>{
     if (MessageTypes.LOGIN == payload.type)
-        if (payload.data == StatusMessage.LOGGED_IN)
+        if (StatusMessage.LOGGED_IN in payload.data)
         {
             dispatch(login())
-            return true;
+            return [true, payload.data[StatusMessage.LOGGED_IN]];
         }
-        else if (payload.data == StatusMessage.FAILED_LOG_IN)
-            return false;
+        else if (StatusMessage.FAILED_LOG_IN in payload.data)
+            return [false, payload.data[StatusMessage.FAILED_LOG_IN]];
         else
             console.log("Unknown response")
     else
@@ -55,26 +55,26 @@ export const handleVerificationReponse = (payload) =>{
 //#region Forgot password
 export const handleForgotPasswordVerificationCodeResponse =(payload) =>{
     let data = payload.data
-    if (data === StatusMessage.FORGOT_PASSWORD_GOOD)
-        return true
+    if (StatusMessage.FORGOT_PASSWORD_GOOD in data)
+        return [true, data[StatusMessage.FORGOT_PASSWORD_GOOD]]
     else
-        return false
+        return [false, data[StatusMessage.FORGOT_PASSWORD_BAD]]
 }
 
 export const handleForgotPasswordVerifyCodeResponse = (payload) =>{
     let data = payload.data
-    if (data===StatusMessage.FORGOT_PASSWORD_GOOD)
-        return true
+    if (StatusMessage.FORGOT_PASSWORD_GOOD in data)
+        return [true, StatusMessage.FORGOT_PASSWORD_GOOD]
     else
-        return false
+        return [false, StatusMessage.FORGOT_PASSWORD_BAD]
 }
 
 export const handleChangePasswordResponse = (payload) =>{
     let data = payload.data
-    if (data ===StatusMessage.CHANGE_PASSWORD_BAD)
-        return false
+    if (StatusMessage.CHANGE_PASSWORD_BAD in data)
+        return [false, data[StatusMessage.CHANGE_PASSWORD_BAD]]
     else
-        return true
+        return [true,data[StatusMessage.CHANGE_PASSWORD_GOOD]]
 }
 
 //#endregion
