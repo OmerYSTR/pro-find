@@ -5,7 +5,7 @@
 | full_name         |
 | email (UNIQUE)    |
 | password_hash     |
-| user_type         | 'customer' or 'professional'
+| user_type         | 'User' or 'Freelancer'
 | created_at        |
 | profile_image     |
 | salt              |

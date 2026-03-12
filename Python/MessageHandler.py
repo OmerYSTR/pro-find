@@ -9,7 +9,7 @@ import random
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from token_handler import is_token_valid
+from token_handler import is_token_valid, create_token
 
 #region Consts
 DATABASE = r"C:\Coding\pro-find\Python\my_app.db"
@@ -56,6 +56,12 @@ class MessageHandler(ABC):
 
 #region Dispatcher
 class MessageDispatcher:
+    no_token_check = {
+                    MessageTypes.LOGIN.value, MessageTypes.USER_SIGNUP.value,
+                    MessageTypes.FREELANCER_SIGNUP.value, MessageTypes.VERIFICATION.value,
+                    MessageTypes.FORGOT_PASSWORD_AUTHENTICATION.value, MessageTypes.FORGOT_PASSWORD_REQUEST.value,
+                    MessageTypes.CHANGE_PASS.value}
+    
     def __init__(self):
         self._handlers:dict[str, MessageHandler] ={}
 
@@ -65,6 +71,9 @@ class MessageDispatcher:
 
         
     def dispatch(self, msg:Message) ->tuple:
+        if msg.type_of not in self.no_token_check:
+            if not is_token_valid(msg.token):
+                return MessageTypes.BROAD, {StatusMessage.TOKEN_BAD.value:"Token format invalid"}
         handler_class = self._handlers.get(msg.type_of)
         if not handler_class:
             raise Exception("No handler registered")
@@ -83,13 +92,14 @@ def configure_dispatcher() -> MessageDispatcher:
     d.register(MessageTypes.FORGOT_PASSWORD_REQUEST.value, ForgotPasswordEmailVerifciationDispatcher)
     d.register(MessageTypes.FORGOT_PASSWORD_AUTHENTICATION.value, ForgotPasswordAuthenticationDispatcher)
     d.register(MessageTypes.CHANGE_PASS.value, UpdatePasswordDispatcher )
+    d.register(MessageTypes.GET_USER_INFO.value, UserInfoDispatcher)
     
     return d
         
         
         
 
-        
+#region authentication      
 class LoginDispatcher(MessageHandler):
     def handle(self, msg:Message) -> tuple:
         try:
@@ -106,7 +116,7 @@ class LoginDispatcher(MessageHandler):
                     db_password, salt = data   
                     hashed_ps = hash_password(password, salt)
                     if db_password == hashed_ps:
-                        return MessageTypes.LOGIN, {StatusMessage.LOGGED_IN.value:""}
+                        return MessageTypes.LOGIN, {StatusMessage.LOGGED_IN.value:create_token(email)}
                 return MessageTypes.LOGIN, {StatusMessage.FAILED_LOG_IN.value:"Email or password incorrect"}
         
         except Exception as e:
@@ -468,6 +478,91 @@ class UpdatePasswordDispatcher(MessageHandler):
             conn.rollback()
             print("Update password dispatcher - ", e)
             return MessageTypes.CHANGE_PASS, {StatusMessage.CHANGE_PASSWORD_BAD.value:"Client error"}
+#endregion
+
+
+#region homepage
+
+class UserInfoDispatcher():
+    def handle(self, msg:Message)->tuple:
+        try:
+            with sqlite3.connect(DATABASE) as conn:
+                cur = conn.cursor()
+                email = msg.data["email"]
+
+                cur.execute("SELECT id, full_name, user_type FROM users WHERE email=?", (email,))
+                row = cur.fetchone()
+                
+                if not row:
+                    return MessageTypes.GET_USER_INFO, {StatusMessage.FAILED_TO_GET_USER_INFO.value:"Couldn't find user"}
+                
+                id, name, role = row
+                payload_to_send = {"name":name}
+                
+                
+                if role=="Freelancer":
+                    cur.execute("SELECT profession, service_cities, description, years_experience, rating, start_time, end_time FROM professional WHERE user_id=?",(id,))
+                    row = cur.fetchone()
+                    if not row:
+                        return MessageTypes.GET_USER_INFO, {StatusMessage.FAILED_TO_GET_USER_INFO.value:"Couldn't find user"}
+                    profession, cities, description, years_experience, rating, start, end = row
+                    payload_to_send.update({"job":profession, "cities":cities, "description":description, "years":years_experience, "rating":rating, "start_working":start, "end_working":end})
+                
+                    
+                appointments = self._get_appointments(id, cur)
+                
+                notifications = self._get_notifications(id, cur)    
+
+                payload_to_send["appointments"] =  appointments
+                payload_to_send["notifications"] = notifications
+                    
+                return MessageTypes.GET_USER_INFO, {StatusMessage.GOT_USER_INFO.value:payload_to_send}
+        
+        except Exception as e:
+            print(f"User info dispatcher - {e}")
+            return MessageTypes.GET_USER_INFO, {StatusMessage.FAILED_TO_GET_USER_INFO.value:"Couldn't find user"}
+
+
+    def _get_appointments(self, user_id, cur) -> list[dict]:
+        cur.execute("SELECT professional_id, date, start_time, end_time, address, details, status FROM appointments WHERE customer_id = ?",(user_id,))
+        rows = cur.fetchall() 
+        appointments = []
+        if rows:
+            for row in rows:
+                professional_id, date, start_time, end_time, address, details, status = row
+                if status =="Confirmed":
+                        cur.execute("""
+                        SELECT u.full_name
+                        FROM professional p
+                        JOIN users u ON p.user_id = u.id
+                        WHERE p.id = ?
+                    """, (professional_id,))
+                        row = cur.fetchone()
+                        appointments.append({
+                            "professional_name": row[0] if row else "Unknown",
+                            "date":date, "start_time":start_time, "end_time":end_time, 
+                            "address":address, "details":details, "status":status
+                        })
+        return appointments
+       
+        
+    def _get_notifications(self, user_id, cur) -> list[dict]:
+        cur.execute("SELECT message, created_at FROM notifications WHERE user_id=?", (user_id,))
+        rows = cur.fetchall()
+        notifications = []
+        if rows:
+            for row in rows:
+                message, created_at = row
+                notifications.append({"message":message, "created_at":created_at})
+        return notifications
+
+
+#endregion
+
+
+
+
+
 
 #endregion
     
@@ -666,9 +761,9 @@ with sqlite3.connect(DATABASE) as conn:
     # cur.execute("SELECT * FROM pass_change")
     # print(cur.fetchall())
     
+    cur.execute("PRAGMA table_info(appointments)")
+    for col in cur.fetchall():
+        print(col)
     # cur.execute("DELETE FROM users WHERE 1==1")
     # conn.commit()
-    
-    # cur.execute("SELECT * FROM professional")
-    # print(cur.fetchall())
 #endregion

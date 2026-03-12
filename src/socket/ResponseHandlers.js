@@ -8,7 +8,7 @@ export const handleLoginResponse = (payload, dispatch) =>{
     if (MessageTypes.LOGIN == payload.type)
         if (StatusMessage.LOGGED_IN in payload.data)
         {
-            dispatch(login())
+            dispatch(login(payload.data[StatusMessage.LOGGED_IN]))
             return [true, payload.data[StatusMessage.LOGGED_IN]];
         }
         else if (StatusMessage.FAILED_LOG_IN in payload.data)

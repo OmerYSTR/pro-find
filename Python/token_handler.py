@@ -9,6 +9,7 @@ secret_prefix = b"CYBERISH"
 
 DATABASE = r"C:\Coding\pro-find\Python\my_app.db"
 
+
 def _decode(token: str) -> Any:
     token_split = token.split(".")
     if len(token_split)!=2:
@@ -55,7 +56,7 @@ def _encode(data: Any)->str:
 
 
 
-def create_token(user_email:str)->bytes|None:
+def create_token(user_email:str)->str|None:
     with sqlite3.connect(DATABASE) as conn:
         cur = conn.cursor()
         
@@ -68,4 +69,3 @@ def create_token(user_email:str)->bytes|None:
         
         token_obj = {"id":id, "name":name, "Creation time": created_at, "exp":int((datetime.now()+timedelta(days=1)).timestamp())}
         return _encode(token_obj)
-        
