@@ -1,15 +1,17 @@
 import {MessageTypes, StatusMessage} from "./MsgTypes"
 import {login, setUserInfo} from "../store/authSlice"
 import StateManagedSelect from "react-select";
+import { appointmentsRecvd } from "../store/appointmentsSlice";
 
 
 function CheckBROADErrors(payload){
-    data = payload.data
+    let data = payload.data
     if (payload.type === MessageTypes.BROAD){
         if (StatusMessage.TOKEN_BAD in data)
             return [false, "Token invalid.\nRefresh page"]
         //else ....
     }
+    else{ return [true, ""]}
 }
 
 
@@ -97,13 +99,24 @@ export const handleUserInfoResponse = (dispatch, payload) =>{
     }
 
     else{
-        data = payload.data
+        let data = payload.data
 
         if (StatusMessage.FAILED_TO_GET_USER_INFO in data){
             return [false, "Issue retrieving info"]
         }
         else{
-            const accountInfo = data
+            const accInfo = data[StatusMessage.GOT_USER_INFO]
+            let toInsert = {"user":{}}
+            for (const key in accInfo){
+                if (key === "appointments") break
+                
+                toInsert["user"][key] = accInfo[key]
+            }
+            toInsert["notifications"] = accInfo["notifications"]
+            dispatch(setUserInfo(toInsert)) 
+
+            let action = {"payload":accInfo["appointments"]}
+            dispatch(appointmentsRecvd(action))   
         }
     }
 }

@@ -498,7 +498,7 @@ class UserInfoDispatcher():
                     return MessageTypes.GET_USER_INFO, {StatusMessage.FAILED_TO_GET_USER_INFO.value:"Couldn't find user"}
                 
                 id, name, role = row
-                payload_to_send = {"name":name}
+                payload_to_send = {"name":name, "role":role}
                 
                 
                 if role=="Freelancer":
