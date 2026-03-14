@@ -370,8 +370,9 @@ export default function SignUpPage() {
 
   const handleSignUpPageSubmit = () => {
     setServerError("")
+    console.log(role)
     if (role === "User")
-      SignUpRequest(ws, userInfo,"", role);
+      SignUpRequest(ws, userInfo, role);
     else if (role === "Freelancer")
       SignUpRequest(ws, freelancerInfo, role);
   }
@@ -388,7 +389,7 @@ export default function SignUpPage() {
 
   useEffect(() =>{
     if (!ws) return;
-    ws.onmessage = (event) =>{
+    const handleMessage = (event) =>{
       console.log(`Recvd - ${event.data}`)
       const info = webSocketParser(event.data)
 
@@ -413,6 +414,12 @@ export default function SignUpPage() {
           setServerError(errorMessage)
         }
       }
+    }
+
+    ws.addEventListener("message", handleMessage);
+
+    return () =>{
+      ws.removeEventListener("message", handleMessage);
     }
   },[ws])
 

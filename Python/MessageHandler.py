@@ -481,8 +481,9 @@ class UpdatePasswordDispatcher(MessageHandler):
 #endregion
 
 
-#region homepage
 
+
+#region homepage
 class UserInfoDispatcher():
     def handle(self, msg:Message)->tuple:
         try:
@@ -761,9 +762,9 @@ with sqlite3.connect(DATABASE) as conn:
     # cur.execute("SELECT * FROM pass_change")
     # print(cur.fetchall())
     
-    cur.execute("PRAGMA table_info(appointments)")
-    for col in cur.fetchall():
-        print(col)
+    # cur.execute("PRAGMA table_info(appointments)")
+    # for col in cur.fetchall():
+    #     print(col)
     # cur.execute("DELETE FROM users WHERE 1==1")
     # conn.commit()
 #endregion

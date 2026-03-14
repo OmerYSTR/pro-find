@@ -142,7 +142,7 @@ function ChangePassword({changePasswordRequest, password, setPassword }) {
     
     useEffect(() =>{
         if (!ws) return;
-        ws.onmessage = (event) => {
+        const handleMessage = (event) => {
             setServerError("")
             console.log(`Recvd - ${event.data}`)
             const info = webSocketParser(event.data)
@@ -176,7 +176,11 @@ function ChangePassword({changePasswordRequest, password, setPassword }) {
                 else setServerError(message)
             }
         }
+        ws.addEventListener("message", handleMessage);
 
+        return () =>{
+            ws.removeEventListener("message", handleMessage)
+        }
     }, [ws, dispatch, navigate])
 
 

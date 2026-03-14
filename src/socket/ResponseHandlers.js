@@ -1,6 +1,16 @@
 import {MessageTypes, StatusMessage} from "./MsgTypes"
-import {login} from "../store/authSlice"
+import {login, setUserInfo} from "../store/authSlice"
 import StateManagedSelect from "react-select";
+
+
+function CheckBROADErrors(payload){
+    data = payload.data
+    if (payload.type === MessageTypes.BROAD){
+        if (StatusMessage.TOKEN_BAD in data)
+            return [false, "Token invalid.\nRefresh page"]
+        //else ....
+    }
+}
 
 
 //#region Login
@@ -76,5 +86,27 @@ export const handleChangePasswordResponse = (payload) =>{
     else
         return [true,data[StatusMessage.CHANGE_PASSWORD_GOOD]]
 }
+
+//#endregion
+
+//#region Homepage
+export const handleUserInfoResponse = (dispatch, payload) =>{
+    const [notExist, statusMessage] = CheckBROADErrors(payload)
+    if (!notExist){
+        return [notExist, statusMessage]
+    }
+
+    else{
+        data = payload.data
+
+        if (StatusMessage.FAILED_TO_GET_USER_INFO in data){
+            return [false, "Issue retrieving info"]
+        }
+        else{
+            const accountInfo = data
+        }
+    }
+}
+
 
 //#endregion

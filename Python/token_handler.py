@@ -67,5 +67,7 @@ def create_token(user_email:str)->str|None:
         
         id, name, created_at = row
         
-        token_obj = {"id":id, "name":name, "Creation time": created_at, "exp":int((datetime.now()+timedelta(days=1)).timestamp())}
+        token_obj = {"id":id, "email": user_email, "name":name, "Creation time": created_at, "exp":int((datetime.now()+timedelta(days=1)).timestamp())}
         return _encode(token_obj)
+    
+#print(create_token("yaffetsterno@gmail.com"))

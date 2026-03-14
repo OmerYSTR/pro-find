@@ -62,3 +62,20 @@ export function ChangePasswordRequest(ws, email, pass, token=""){
     ws.send(msg)
 }
 //#endregion
+
+
+//#region HomePage
+export function UserInfoRequest(ws, token){
+    const [encodedData] = token.split('.')
+    const decodedJson = atob(encodedData)
+    const data = JSON.parse(decodedJson)
+    let payload = {"email":data.email}
+    let msg = MsgBuild(MessageTypes.GET_USER_INFO, payload, token, "JSON")
+    ws.send(msg) 
+}
+
+
+
+//#endregion
+
+
