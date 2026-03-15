@@ -9,7 +9,7 @@ import random
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from token_handler import is_token_valid, create_token
+from token_handler import is_token_valid, create_token, decode
 
 #region Consts
 DATABASE = r"C:\Coding\pro-find\Python\my_app.db"
@@ -488,8 +488,12 @@ class UserInfoDispatcher():
     def handle(self, msg:Message)->tuple:
         try:
             with sqlite3.connect(DATABASE) as conn:
+                actual_email = decode(msg.token)["email"]
                 cur = conn.cursor()
                 email = msg.data["email"]
+                
+                if email !=actual_email:
+                    return MessageTypes.GET_USER_INFO, {StatusMessage.FAILED_TO_GET_USER_INFO.value:"Email not matching token"}
 
                 cur.execute("SELECT id, full_name, user_type FROM users WHERE email=?", (email,))
                 row = cur.fetchone()
@@ -525,36 +529,74 @@ class UserInfoDispatcher():
 
 
     def _get_appointments(self, user_id, cur) -> list[dict]:
-        cur.execute("SELECT professional_id, date, start_time, end_time, address, details, status FROM appointments WHERE customer_id = ?",(user_id,))
-        rows = cur.fetchall() 
+        now = datetime.now()
+        current_date = now.strftime("%Y-%m-%d")
+        current_time = now.strftime("%H:%M")
+
+        query = """
+            SELECT u.full_name, a.date, 
+                a.start_time, a.end_time, a.address, 
+                a.details, a.status 
+            FROM appointments a
+            JOIN professional p ON a.professional_id = p.id
+            JOIN users u ON p.user_id = u.id
+            WHERE a.customer_id = ? 
+            AND a.status = 'Confirmed'
+            AND (a.date > ? OR (a.date = ? AND a.start_time >= ?))
+            ORDER BY a.date ASC, a.start_time ASC
+        """
+        
+        cur.execute(query, (user_id, current_date, current_date, current_time))
+        rows = cur.fetchall()
+        
         appointments = []
-        if rows:
-            for row in rows:
-                professional_id, date, start_time, end_time, address, details, status = row
-                if status =="Confirmed":
-                        cur.execute("""
-                        SELECT u.full_name
-                        FROM professional p
-                        JOIN users u ON p.user_id = u.id
-                        WHERE p.id = ?
-                    """, (professional_id,))
-                        row = cur.fetchone()
-                        appointments.append({
-                            "professional_name": row[0] if row else "Unknown",
-                            "date":date, "start_time":start_time, "end_time":end_time, 
-                            "address":address, "details":details, "status":status
-                        })
+        for row in rows:
+            name, app_date, start, end, addr, det, stat = row
+            
+            date_obj = datetime.strptime(str(app_date), "%Y-%m-%d")
+            display_date = date_obj.strftime("%d/%m/%Y")
+            
+            appointments.append({
+                "professional_name": name,
+                "display_date": display_date,
+                "date": str(app_date), 
+                "start_time": str(start), 
+                "end_time": str(end), 
+                "address": addr, 
+                "details": det, 
+                "status": stat, 
+                "iso_timestamp": f"{app_date}T{start}"
+            })
+            
         return appointments
-       
+            
         
     def _get_notifications(self, user_id, cur) -> list[dict]:
-        cur.execute("SELECT message, created_at FROM notifications WHERE user_id=?", (user_id,))
+        query = """
+            SELECT n.message, n.created_at, n.is_read, u.full_name as sender_name
+            FROM notifications n
+            LEFT JOIN users u ON n.from_id = u.id
+            WHERE n.user_id = ? AND n.is_read = 0
+            ORDER BY n.created_at DESC
+        """
+        cur.execute(query, (user_id,))
         rows = cur.fetchall()
         notifications = []
-        if rows:
-            for row in rows:
-                message, created_at = row
-                notifications.append({"message":message, "created_at":created_at})
+        for row in rows:
+            message, created_at, is_read, sender_name = row            
+            try:
+                dt_obj = datetime.strptime(created_at, "%Y-%m-%d %H:%M:%S")
+                formatted_date = dt_obj.strftime("%d/%m/%y")
+            except ValueError:
+                formatted_date = str(created_at)
+
+            notifications.append({
+                "message": message,
+                "created_at": formatted_date,
+                "from_name": sender_name if sender_name else "System",
+                "is_read": bool(is_read)
+            })
+            
         return notifications
 
 
@@ -582,8 +624,11 @@ class UserSignUpValidator(Validator):
         #Name I don't check
         try:
             email = msg.data["email"]
+            full_name = msg.data["name"]
             if not self._check_email_format(email):
                 return False, {StatusMessage.FAILED_SIGN_UP.value:"Email format is incorrect"}
+            if len(full_name)>30:
+                return False, {StatusMessage.FAILED_SIGN_UP.value:"Name field can't exceed 30 characters"}
             return True, ""
         except Exception as e:
             print("User sign up validator - ",e)
@@ -609,6 +654,9 @@ class FreelancerSignUpValidator(Validator):
             if not self._check_email_format(email):
                 return status, {error_message:"Email format is incorrect"}
 
+            if len(data["name"]) > 30:
+                return status, {error_message:"Name field can't exceed 30 characters"}
+            
             if data["profession"] not in PROFESSIONS:
                 return status, {error_message:"Job isn't recognized"}
 
@@ -759,12 +807,15 @@ with sqlite3.connect(DATABASE) as conn:
 # #                 VALUES (?,?,?,?,?)""", ("Ido Yaffet", "idoy90@gmail.com", password_hash, "User", salt))
 # #     conn.commit()
     
-    # cur.execute("SELECT * FROM pass_change")
+    # cur.execute("SELECT * FROM notifications")
     # print(cur.fetchall())
-    
-    # cur.execute("PRAGMA table_info(appointments)")
+        # cur.execute("""ALTER TABLE notifications 
+    #     ADD COLUMN from_id INTEGER REFERENCES users(id) ON DELETE SET NULL;""")
+    # conn.commit()
+    # cur.execute("PRAGMA table_info(notifications)")
     # for col in cur.fetchall():
     #     print(col)
     # cur.execute("DELETE FROM users WHERE 1==1")
     # conn.commit()
+    
 #endregion

@@ -10,7 +10,7 @@ secret_prefix = b"CYBERISH"
 DATABASE = r"C:\Coding\pro-find\Python\my_app.db"
 
 
-def _decode(token: str) -> Any:
+def decode(token: str) -> Any:
     token_split = token.split(".")
     if len(token_split)!=2:
         return None
@@ -31,7 +31,7 @@ def _decode(token: str) -> Any:
 
 
 def is_token_valid(token:str) -> bool:
-    decoded_token = _decode(token)
+    decoded_token = decode(token)
 
     if not decoded_token:
         return False

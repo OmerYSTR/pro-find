@@ -16,8 +16,8 @@ const authSlice = createSlice({
             state.userToken = info.payload;
         },
         setUserInfo(state, info){
-            state.userInfo = info.user
-            state.notifications = info.notifications
+            state.userInfo = info.payload.user
+            state.notifications = info.payload.notifications
         },
         logout(state){
             state.usesrInfo = {};

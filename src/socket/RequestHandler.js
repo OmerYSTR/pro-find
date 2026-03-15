@@ -74,7 +74,9 @@ export function UserInfoRequest(ws, token){
     ws.send(msg) 
 }
 
-
+export function GetPublicProfileInfo(ws, targetId){
+    return;
+}
 
 //#endregion
 

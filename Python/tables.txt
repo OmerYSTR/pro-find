@@ -98,6 +98,7 @@ customer
 | message                              |
 | is_read (0/1)                        |
 | created_at                           |
+| from_id                              |
 +--------------------------------------+
 
 

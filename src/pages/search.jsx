@@ -1,3 +1,3 @@
-export default function HomePage(){
+export default function Search(){
     console.log("Search page");
 }

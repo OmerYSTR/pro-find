@@ -15,7 +15,7 @@ class MessageTypes(Enum):
 
 #Homepage
     GET_USER_INFO = "USR_INFO"
-
+    GET_PUBLIC_PROFILE_INFO= "PBL_INFO"
 
 
 class StatusMessage(Enum):

@@ -2,7 +2,7 @@ import socket
 import threading
 import My_WebSocket
 import MessageHandler
-import json
+from datetime import datetime, timedelta
 from collections import deque
 import time
 import sqlite3
@@ -35,24 +35,42 @@ def can_accept_connection(ip: str) -> bool:
 
 
 
-
-def cleanup_expired_user():
+def cleanup_tables():
     while True:
         try:
+            now = datetime.now()
+            current_date = now.strftime("%Y-%m-%d")
+            current_time = now.strftime("%H:%M")
+            one_week_ago = (now - timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")
+
             with sqlite3.connect(DATABASE) as conn:
                 cur = conn.cursor()
                 
-                cur.execute("""DELETE FROM pending_users WHERE expires_at IS NOT NULL AND expires_at<=CURRENT_TIMESTAMP""")
-                delete = cur.rowcount
+                cur.execute("""
+                    DELETE FROM pending_users 
+                    WHERE expires_at IS NOT NULL AND expires_at <= CURRENT_TIMESTAMP
+                """)
+                users_deleted = cur.rowcount
+
+                cur.execute("""DELETE FROM appointments WHERE date < ? OR (date = ? AND start_time < ?)
+                """, (current_date, current_date, current_time))
+                apps_deleted = cur.rowcount
+
+                cur.execute("""DELETE FROM notifications WHERE created_at < ?""", (one_week_ago,))
+                notes_deleted = cur.rowcount
                 
                 conn.commit()
-                if delete:
-                    print(f"Cleanup deleted {delete} expired pending users")
-        except Exception as e:
-            print("Cleanup error - ", e)
-           
-        time.sleep(3600) 
 
+                if users_deleted or apps_deleted or notes_deleted:
+                    print(f"[{now.strftime('%Y-%m-%d %H:%M')}] Cleanup complete:")
+                    print(f" - {users_deleted} pending users removed")
+                    print(f" - {apps_deleted} past appointments removed")
+                    print(f" - {notes_deleted} old notifications removed")
+
+        except Exception as e:
+            print(f"Cleanup error - {e}")
+           
+        time.sleep(3600)
 
 
 
@@ -79,15 +97,15 @@ def handle_client(soc: socket.socket):
         except:
             break
 
-        print(msg.type_of, msg.data)
+        print(f"Got - {msg.type_of}, {msg.data}\n\n")
         handler_type, to_send = dispacher.dispatch(msg)
-        print(handler_type, to_send)
+        print(f"Sending - {handler_type}, {to_send}\n\n")
         My_WebSocket.send_message(
             clt_soc,
             handler_type,
             msg.token,
             to_send,
-            True if len(json.dumps(to_send)) > 1000 else False
+            False
         )
 
 
@@ -112,7 +130,7 @@ if __name__ == "__main__":
     srv.bind(("0.0.0.0", 1111))
     srv.listen(10)
     
-    cleanup_thread = threading.Thread(target=cleanup_expired_user, daemon=True)
+    cleanup_thread = threading.Thread(target=cleanup_tables, daemon=True)
     cleanup_thread.start()
     
     main_thread(srv)

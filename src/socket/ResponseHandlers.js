@@ -108,18 +108,20 @@ export const handleUserInfoResponse = (dispatch, payload) =>{
             const accInfo = data[StatusMessage.GOT_USER_INFO]
             let toInsert = {"user":{}}
             for (const key in accInfo){
-                if (key === "appointments") break
+                if (key === "appointments" || key==="notifications") continue;
                 
                 toInsert["user"][key] = accInfo[key]
             }
             toInsert["notifications"] = accInfo["notifications"]
             dispatch(setUserInfo(toInsert)) 
-
-            let action = {"payload":accInfo["appointments"]}
-            dispatch(appointmentsRecvd(action))   
+            dispatch(appointmentsRecvd(accInfo["appointments"]))   
+            return [true, ""]
         }
     }
 }
 
+export const handleProfileInfoResponse = (payload) => {
+    return;
+}
 
 //#endregion

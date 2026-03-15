@@ -149,10 +149,7 @@ function ChangePassword({changePasswordRequest, password, setPassword }) {
             console.log(`type - ${info.type}\ndata - ${info.data}`)
             if (info.type == MessageTypes.LOGIN){
                 const [loggedIn, message] = handleLoginResponse(info, dispatch);
-                if (loggedIn){
-                    navigate("/")
-                }
-                else{
+                if (!loggedIn){
                     setServerError(message)
                 }}
             
