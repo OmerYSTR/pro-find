@@ -517,7 +517,7 @@ class UserInfoDispatcher():
                 appointments = self._get_appointments(id, cur)
                 
                 notifications = self._get_notifications(id, cur)    
-
+                conn.commit()
                 payload_to_send["appointments"] =  appointments
                 payload_to_send["notifications"] = notifications
                     
@@ -576,11 +576,15 @@ class UserInfoDispatcher():
             SELECT n.message, n.created_at, n.is_read, u.full_name as sender_name
             FROM notifications n
             LEFT JOIN users u ON n.from_id = u.id
-            WHERE n.user_id = ? AND n.is_read = 0
+            WHERE n.user_id = ?
             ORDER BY n.created_at DESC
         """
         cur.execute(query, (user_id,))
         rows = cur.fetchall()
+        
+        
+        cur.execute("""UPDATE notifications SET is_read = 1 WHERE user_id=? AND is_read = 0""", (user_id,))           
+
         notifications = []
         for row in rows:
             message, created_at, is_read, sender_name = row            
@@ -807,15 +811,24 @@ with sqlite3.connect(DATABASE) as conn:
 # #                 VALUES (?,?,?,?,?)""", ("Ido Yaffet", "idoy90@gmail.com", password_hash, "User", salt))
 # #     conn.commit()
     
+
+    # cur.execute("""UPDATE notifications SET is_read = 0""")
+    # conn.commit()
+
     # cur.execute("SELECT * FROM notifications")
-    # print(cur.fetchall())
+    # notifications = cur.fetchall()
+    # for note in notifications:
+    #     print(note)
         # cur.execute("""ALTER TABLE notifications 
     #     ADD COLUMN from_id INTEGER REFERENCES users(id) ON DELETE SET NULL;""")
     # conn.commit()
-    # cur.execute("PRAGMA table_info(notifications)")
-    # for col in cur.fetchall():
-    #     print(col)
+
     # cur.execute("DELETE FROM users WHERE 1==1")
     # conn.commit()
+    # cur.execute("""INSERT INTO notifications (user_id, message, is_read, created_at, from_id)
+    # VALUES (13, 'System alert: Your trial period ended last week.', 0, '2026-03-05 10:00:00', NULL)""")
     
+    # cur.execute("""INSERT INTO notifications (user_id, message, is_read, created_at, from_id)
+    # VALUES (13, 'You viewed the project files yesterday.', 1, '2026-03-14 15:30:00', 11)""")
+    # conn.commit()
 #endregion

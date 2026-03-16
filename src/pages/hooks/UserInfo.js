@@ -10,18 +10,23 @@ import { MessageTypes } from "../../socket/MsgTypes";
 
 export default function useUserSync(ws, token, dispatch, navigate, setViewedFreelancer) {
     useEffect(() => {
+
         if (!ws || !token) return;
 
-        const sendRequest = () => UserInfoRequest(ws, token);
+        const sendRequest = () =>{ UserInfoRequest(ws, token);}
 
+
+        const handleOpen = () => sendRequest()
         if (ws.readyState === WebSocket.OPEN) {
+
             sendRequest();
         } else {
-            ws.addEventListener("open", sendRequest, { once: true });
+            ws.addEventListener("open", handleOpen);
         }
 
         const handleMessage = (event) => {
             let info = webSocketParser(event.data);
+            console.log("Recvd - ", info)
             if (MessageTypes.GET_USER_INFO === info.type){
                 const [status, msg] = handleUserInfoResponse(dispatch, info);
                 if (!status) {

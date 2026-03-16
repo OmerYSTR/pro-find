@@ -347,7 +347,7 @@ def build_proper_json_payload(type:MessageTypes, payload, token):
 def send_message(clt: socket.socket, type, token, msg=None, to_split_message=None, opcode:WebSocketOpcodes=WebSocketOpcodes.TEXT):
     try:
         msg_dict = build_proper_json_payload(type, msg, token) if msg is not None else None
-
+        
         msg_to_send = json.dumps(msg_dict)
         
         message = WebSocketMessageFactory(opcode, to_split=to_split_message, payload=msg_to_send)

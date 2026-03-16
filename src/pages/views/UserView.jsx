@@ -50,16 +50,23 @@ export default function UserView() {
                                 <div key={idx} className="flex flex-col items-start text-left text-slate-300 text-sm py-3 border-b border-slate-700/50 last:border-0 hover:bg-slate-700/20 transition-colors rounded-lg px-2">
                                     <div className="flex items-center justify-between w-full mb-1">
                                         <div className="flex items-center">
-                                            <span className="w-2 h-2 rounded-full bg-blue-500 mr-3"></span>
-                                            <span className="text-blue-400 font-semibold text-xs uppercase tracking-wider">
-                                                From: {note.from_name}
-                                            </span>
+                                            {!note.is_read ? (
+                                                <>
+                                                <span className="w-2 h-2 rounded-full bg-blue-500 mr-3"></span>
+                                                <span className="text-blue-400 font-semibold text-xs uppercase tracking-wider">
+                                                    From: {note.from_name}
+                                                </span>
+                                                </>
+                                            ) : (
+                                                <span className="text-gray-400 font-semibold text-xs uppercase tracking-wider">
+                                                    From: {note.from_name}
+                                                </span>
+                                            )}
                                         </div>
                                         <span className="text-[10px] text-slate-500 font-mono italic">
                                             {note.created_at}
                                         </span>
                                     </div>
-                                    {/* Notification Message - Pinned Left */}
                                     <p className="ml-5 text-slate-200 leading-relaxed text-left">
                                         {note.message}
                                     </p>

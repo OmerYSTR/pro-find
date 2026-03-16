@@ -42,6 +42,7 @@ def cleanup_tables():
             current_date = now.strftime("%Y-%m-%d")
             current_time = now.strftime("%H:%M")
             one_week_ago = (now - timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")
+            one_day_ago = (now - timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
 
             with sqlite3.connect(DATABASE) as conn:
                 cur = conn.cursor()
@@ -56,7 +57,8 @@ def cleanup_tables():
                 """, (current_date, current_date, current_time))
                 apps_deleted = cur.rowcount
 
-                cur.execute("""DELETE FROM notifications WHERE created_at < ?""", (one_week_ago,))
+                cur.execute("""DELETE FROM notifications WHERE created_at < ? OR (created_at < ? AND is_read = 1)
+                            """,(one_week_ago, one_day_ago))
                 notes_deleted = cur.rowcount
                 
                 conn.commit()
