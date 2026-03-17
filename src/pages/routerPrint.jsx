@@ -15,7 +15,6 @@ function Navbar({ role }) {
   return (
     <nav className="fixed left-0 top-0 h-full w-60 bg-slate-800 flex flex-col py-8 px-4 shadow-lg">
       
-      {/* Top Section */}
       <div className="flex flex-col gap-2">
         <Link
           to="/"
@@ -41,7 +40,6 @@ function Navbar({ role }) {
         )}
       </div>
 
-      {/* Bottom Section */}
       <div className="mt-auto border-t border-slate-700 pt-4">
         <button
           onClick={handleLogout}

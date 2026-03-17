@@ -504,7 +504,6 @@ class UserInfoDispatcher():
                 id, name, role = row
                 payload_to_send = {"name":name, "role":role}
                 
-                
                 if role=="Freelancer":
                     cur.execute("SELECT profession, service_cities, description, years_experience, rating, start_time, end_time FROM professional WHERE user_id=?",(id,))
                     row = cur.fetchone()
@@ -514,7 +513,7 @@ class UserInfoDispatcher():
                     payload_to_send.update({"job":profession, "cities":cities, "description":description, "years":years_experience, "rating":rating, "start_working":start, "end_working":end})
                 
                     
-                appointments = self._get_appointments(id, cur)
+                appointments = self._get_appointments(id, cur, role)
                 
                 notifications = self._get_notifications(id, cur)    
                 conn.commit()
@@ -528,36 +527,56 @@ class UserInfoDispatcher():
             return MessageTypes.GET_USER_INFO, {StatusMessage.FAILED_TO_GET_USER_INFO.value:"Couldn't find user"}
 
 
-    def _get_appointments(self, user_id, cur) -> list[dict]:
+    def _get_appointments(self, user_id, cur, role) -> list[dict]:
+        is_freelancer = (role == "Freelancer")
+        
         now = datetime.now()
         current_date = now.strftime("%Y-%m-%d")
         current_time = now.strftime("%H:%M")
 
-        query = """
+        actual_id = user_id
+        if is_freelancer:
+            id_column = "a.professional_id"
+            user_join = "JOIN users u ON a.customer_id = u.id"
+        else:
+            id_column = "a.customer_id"
+            user_join = """
+                JOIN professional p ON a.professional_id = p.id
+                JOIN users u ON p.user_id = u.id
+            """
+
+        query = f"""
             SELECT u.full_name, a.date, 
                 a.start_time, a.end_time, a.address, 
                 a.details, a.status 
             FROM appointments a
-            JOIN professional p ON a.professional_id = p.id
-            JOIN users u ON p.user_id = u.id
-            WHERE a.customer_id = ? 
-            AND a.status = 'Confirmed'
+            {user_join}
+            WHERE {id_column} = ? 
+        """
+
+        if not is_freelancer:
+            query += " AND a.status = 'Confirmed'"
+
+        query += """
             AND (a.date > ? OR (a.date = ? AND a.start_time >= ?))
             ORDER BY a.date ASC, a.start_time ASC
         """
         
-        cur.execute(query, (user_id, current_date, current_date, current_time))
+        cur.execute(query, (actual_id, current_date, current_date, current_time))
         rows = cur.fetchall()
         
         appointments = []
         for row in rows:
             name, app_date, start, end, addr, det, stat = row
             
-            date_obj = datetime.strptime(str(app_date), "%Y-%m-%d")
-            display_date = date_obj.strftime("%d/%m/%Y")
+            try:
+                date_obj = datetime.strptime(str(app_date), "%Y-%m-%d")
+                display_date = date_obj.strftime("%d/%m/%Y")
+            except ValueError:
+                display_date = str(app_date)
             
             appointments.append({
-                "professional_name": name,
+                "person_name": name, 
                 "display_date": display_date,
                 "date": str(app_date), 
                 "start_time": str(start), 
@@ -827,7 +846,61 @@ with sqlite3.connect(DATABASE) as conn:
     # conn.commit()
     # cur.execute("""INSERT INTO notifications (user_id, message, is_read, created_at, from_id)
     # VALUES (13, 'System alert: Your trial period ended last week.', 0, '2026-03-05 10:00:00', NULL)""")
+
+    # notifications_data = [
+    #     ("Your appointment with Dr. Smith has been confirmed for tomorrow at 10:00 AM.", 0, datetime.now()),
+    #     ("New Message: A freelancer has replied to your project inquiry.", 0, datetime.now()),
+    #     ("Reminder: Your scheduled session starts in 30 minutes. Get ready!", 0, datetime.now()),
+    #     ("Payment Successful: Your transaction for 'Web Design' was processed.", 1, datetime.now()),
+    #     ("Security Alert: A new login was detected from a Chrome browser on Windows.", 0, datetime.now()),
+    #     ("The address for your 'Home Cleaning' service has been updated by the pro.", 0, datetime.now()),
+    #     ("Rate your experience! How was your session with Sarah last night?", 1, datetime.now()),
+    #     ("System Update: We've added new features to your dashboard. Check them out!", 0, datetime.now()),
+    #     ("Booking Cancelled: Unfortunately, the professional is no longer available.", 0, datetime.now()),
+    #     ("Welcome to the platform! Complete your profile to get the best results.", 1, datetime.now())
+    # ]
+
+    # for msg, is_read, created in notifications_data:
+    #     cur.execute("""
+    #         INSERT INTO notifications (user_id, message, is_read, created_at)
+    #         VALUES (11, ?, ?, ?)
+    #     """, (msg, is_read, created))
     
+    
+    # appointments_to_insert = []
+
+    # base_date = datetime.now()
+
+    # for i in range(12):
+    #     status = "Confirmed" if i < 5 else "Requested"
+        
+    #     app_date = (base_date + timedelta(days=i)).strftime("%Y-%m-%d")
+        
+    #     appointments_to_insert.append((
+    #         11,           # professional_id
+    #         13,           # customer_id
+    #         app_date,     # date
+    #         "10:00",      # start_time
+    #         "11:00",      # end_time
+    #         "123 Main St, Tech City", # address
+    #         f"Session number {i+1} regarding project details.", # details
+    #         status,       # status
+    #         None,         # cancel_reason (NULL)
+    #         datetime.now() # created_at
+    #     ))
+
+    # # SQL Execution
+    # for app in appointments_to_insert:
+    #     cur.execute("""
+    #         INSERT INTO appointments (
+    #             professional_id, customer_id, date, start_time, 
+    #             end_time, address, details, status, cancel_reason, created_at
+    #         )
+    #         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    #     """, app)
+    
+    # cur.execute("SELECT * FROM appointments")
+    # print(cur.fetchall())
     # cur.execute("""INSERT INTO notifications (user_id, message, is_read, created_at, from_id)
     # VALUES (13, 'You viewed the project files yesterday.', 1, '2026-03-14 15:30:00', 11)""")
     # conn.commit()

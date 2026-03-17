@@ -42,7 +42,7 @@ def cleanup_tables():
             current_date = now.strftime("%Y-%m-%d")
             current_time = now.strftime("%H:%M")
             one_week_ago = (now - timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")
-            one_day_ago = (now - timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
+            two_day_ago = (now - timedelta(days=2)).strftime("%Y-%m-%d %H:%M:%S")
 
             with sqlite3.connect(DATABASE) as conn:
                 cur = conn.cursor()
@@ -58,7 +58,7 @@ def cleanup_tables():
                 apps_deleted = cur.rowcount
 
                 cur.execute("""DELETE FROM notifications WHERE created_at < ? OR (created_at < ? AND is_read = 1)
-                            """,(one_week_ago, one_day_ago))
+                            """,(one_week_ago, two_day_ago))
                 notes_deleted = cur.rowcount
                 
                 conn.commit()
@@ -132,8 +132,10 @@ if __name__ == "__main__":
     srv.bind(("0.0.0.0", 1111))
     srv.listen(10)
     
-    cleanup_thread = threading.Thread(target=cleanup_tables, daemon=True)
-    cleanup_thread.start()
+    #__________####SKIP IN DEVELOPMENT, BRING BACK WHEN PRESENTING!!!!!!!!!!!!#######____________#
+    
+    # cleanup_thread = threading.Thread(target=cleanup_tables, daemon=True)
+    # cleanup_thread.start()
     
     main_thread(srv)
     

@@ -32,7 +32,6 @@ export default function HomePage() {
                 <FreelancerView 
                     user={viewedFreelancer} 
                     isPublic={true} 
-                    onBack={() => setViewedFreelancer(null)} 
                 />
             );
         }
