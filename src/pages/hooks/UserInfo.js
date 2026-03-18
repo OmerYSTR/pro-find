@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { UserInfoRequest } from "../../socket/RequestHandler";
 import webSocketParser from "../../socket/MsgParser";
-import { handleUserInfoResponse, handleProfileInfoResponse } from "../../socket/ResponseHandlers";
+import { handleUserInfoResponse, handleProfileInfoResponse, handleUpdatedAppointmentsResponse } from "../../socket/ResponseHandlers";
 import { logout } from "../../store/authSlice";
 import { MessageTypes } from "../../socket/MsgTypes";
 
@@ -25,6 +25,7 @@ export default function useUserSync(ws, token, dispatch, navigate, setViewedFree
         }
 
         const handleMessage = (event) => {
+
             let info = webSocketParser(event.data);
             console.log("Recvd - ", info)
             if (MessageTypes.GET_USER_INFO === info.type){
@@ -37,6 +38,15 @@ export default function useUserSync(ws, token, dispatch, navigate, setViewedFree
                 const [status, data] = handleProfileInfoResponse(info) 
                 if (status){
                     setViewedFreelancer(data)
+                }
+            }
+            else if(MessageTypes.UPDATE_APPOINTMENTS_STATUS === info.type){
+                const [status, data] = handleUpdatedAppointmentsResponse(info)
+                if (status){
+                    UserInfoRequest(ws, token)
+                }
+                else{
+                    console.log("Error occured")
                 }
             }
         };

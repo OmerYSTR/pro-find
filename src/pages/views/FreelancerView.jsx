@@ -1,7 +1,8 @@
-import { WelcomeBack, NotificationsView, UpcomingAppointmentsView, PendingAppointments } from "./HelpModule"
+import { WelcomeBack, NotificationsView, UpcomingAppointmentsView, PendingAppointments, FreelancerInfo } from "./HelpModule"
 import { useSelector } from "react-redux"
 import { Link } from "react-router-dom"
 import { useRef, useState } from "react"
+import { useSocket } from "../../socket/SocketContext"
 
 function FreelancerPublic({ user }){
     return (<p>Public</p>)
@@ -10,7 +11,11 @@ function FreelancerPublic({ user }){
 function FreelancerPrivate(){
     const acceptAppointmentsRef = useRef(null);
     const scrollToRef = () =>(acceptAppointmentsRef.current?.scrollIntoView({behavior:"smooth"}))
+    const ws = useSocket()
+    const token = useSelector((state) => state.auth.userToken)
 
+
+    const userInfo = useSelector((state) => state.auth.userInfo)
 
     const username = useSelector((state) => state.auth.userInfo?.name)
     const notifications = useSelector((state) => state.auth.notifications || [])
@@ -22,6 +27,9 @@ function FreelancerPrivate(){
     return (
         <div className="p-8 max-w-6xl mx-auto animate-fadeIn space-y-8">
             <WelcomeBack username={username}/>
+
+
+            <FreelancerInfo profession={userInfo?.job} serviceCities={userInfo?.cities} description={userInfo?.description} years_experience={userInfo?.years} jobDuration={userInfo?.job_duration} rating={userInfo?.rating} />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-slate-800/50 border-l-4 border-purple-500 p-6 rounded-xl shadow-lg backdrop-blur-sm">
@@ -64,7 +72,7 @@ function FreelancerPrivate(){
             </div>
             
             <div ref={acceptAppointmentsRef}>
-                <PendingAppointments appointments={pendingAppointments} />
+                <PendingAppointments appointments={pendingAppointments} ws={ws} token={token}/>
             </div>
             
 

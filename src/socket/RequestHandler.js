@@ -74,6 +74,14 @@ export function UserInfoRequest(ws, token){
     ws.send(msg) 
 }
 
+
+export function UpdateAppointmentsStatusRequest(ws, apps, token){
+    let payload = {"appointments":apps}
+    let msg = MsgBuild(MessageTypes.UPDATE_APPOINTMENTS_STATUS, payload, token, "JSON")
+    console.log(`About to send - ${msg}`)
+    ws.send(msg)
+}
+
 export function GetPublicProfileInfo(ws, targetId){
     return;
 }

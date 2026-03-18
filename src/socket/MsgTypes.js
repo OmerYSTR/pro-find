@@ -14,7 +14,7 @@ export const MessageTypes = Object.freeze({
 //Homepage
     GET_USER_INFO: "USR_INFO",
     GET_PUBLIC_PROFILE_INFO: "PBL_INFO",
-
+    UPDATE_APPOINTMENTS_STATUS: "UPDT_APP_STAT",
 });
 
 
@@ -42,5 +42,7 @@ export const StatusMessage = Object.freeze({
     GOT_USER_INFO: "GOT_USR_INFO",
     FAILED_TO_GET_USER_INFO: "FLD_USR_INFO",
 
+    UPDATED_APP_STATUS:"UPDT_APP",
+    FAILED_TO_UPDATE_APP_STATUS:"FAILED_UPDT_APP",
 })
 

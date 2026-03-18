@@ -120,6 +120,20 @@ export const handleUserInfoResponse = (dispatch, payload) =>{
     }
 }
 
+export const handleUpdatedAppointmentsResponse = (payload) =>{
+    const [notExist, statusMessage] = CheckBROADErrors(payload)
+    if (!notExist){
+        return [notExist, statusMessage]
+    }
+    let data = payload.data
+    if (StatusMessage.FAILED_TO_UPDATE_APP_STATUS in data)
+        return [false, "Failed to update status"]
+    else if (StatusMessage.UPDATED_APP_STATUS in data)
+        return [true, ""]
+}
+
+
+
 export const handleProfileInfoResponse = (payload) => {
     return;
 }
