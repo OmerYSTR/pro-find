@@ -82,7 +82,15 @@ export function UpdateAppointmentsStatusRequest(ws, apps, token){
     ws.send(msg)
 }
 
-export function GetPublicProfileInfo(ws, targetId){
+
+export function MarkReadNotificationsRequest(ws, userId, token){
+    let payload = {"user_id":userId}
+    let msg = MsgBuild(MessageTypes.MARK_READ_NOTIFICATION, payload, token, "JSON")
+    ws.send(msg)
+}
+
+
+export function GetPublicProfileInfoRequest(ws, targetId){
     return;
 }
 

@@ -94,6 +94,7 @@ def configure_dispatcher() -> MessageDispatcher:
     d.register(MessageTypes.CHANGE_PASS.value, UpdatePasswordDispatcher )
     d.register(MessageTypes.GET_USER_INFO.value, UserInfoDispatcher)
     d.register(MessageTypes.UPDATE_APPOINTMENTS_STATUS.value, ChangeAppointmentStatusDispatcher)
+    d.register(MessageTypes.MARK_READ_NOTIFICATION.value, MarkNotificationsReadDispatcher)
     
     return d
         
@@ -527,12 +528,13 @@ class UserInfoDispatcher(MessageHandler):
                     
                 appointments = self._get_appointments(id, cur, role)
                 
-                notifications = self._get_notifications(id, cur)    
+                notifications = self._get_notifications(id, cur)
+                
                 conn.commit()
                 payload_to_send["appointments"] =  appointments
                 payload_to_send["notifications"] = notifications
                     
-                return MessageTypes.GET_USER_INFO, {StatusMessage.GOT_USER_INFO.value:payload_to_send}
+                return MessageTypes.GET_USER_INFO, {StatusMessage.GOT_USER_INFO.value:payload_to_send, "user_id": id}
         
         except Exception as e:
             print(f"User info dispatcher - {e}")
@@ -540,7 +542,8 @@ class UserInfoDispatcher(MessageHandler):
 
 
     def _get_appointments(self, user_id, cur, role) -> list[dict]:
-        is_freelancer = (role == "Freelancer")
+        
+        is_freelancer = (role=="Freelancer")
         
         now = datetime.now()
         current_date = now.strftime("%Y-%m-%d")
@@ -553,9 +556,9 @@ class UserInfoDispatcher(MessageHandler):
         else:
             id_column = "a.customer_id"
             user_join = """
-                JOIN professional p ON a.professional_id = p.id
+                JOIN professional p ON a.professional_id = p.user_id 
                 JOIN users u ON p.user_id = u.id
-            """
+            """ 
 
         query = f"""
             SELECT u.full_name, a.date, a.id,
@@ -612,10 +615,7 @@ class UserInfoDispatcher(MessageHandler):
             ORDER BY n.created_at DESC
         """
         cur.execute(query, (user_id,))
-        rows = cur.fetchall()
-        
-        
-        cur.execute("""UPDATE notifications SET is_read = 1 WHERE user_id=? AND is_read = 0""", (user_id,))           
+        rows = cur.fetchall()      
 
         notifications = []
         for row in rows:
@@ -640,6 +640,23 @@ class UserInfoDispatcher(MessageHandler):
         return notifications
 
 
+class MarkNotificationsReadDispatcher(MessageHandler):
+    def handle(self, msg: Message) -> tuple:
+        try:
+            user_id = msg.data["user_id"]
+            with sqlite3.connect(DATABASE) as conn:
+                cur = conn.cursor()
+                cur.execute("""
+                    UPDATE notifications 
+                    SET is_read = 1 
+                    WHERE user_id = ? AND is_read = 0
+                """, (user_id,))
+                conn.commit()
+            return MessageTypes.MARK_READ_NOTIFICATION, {StatusMessage.MARKED_READ_NOTIFICATIONS.value: ""}
+        except Exception as e:
+            print("Marked notification dispatcher error - ", e)
+            return MessageTypes.MARK_READ_NOTIFICATION, {StatusMessage.FAILED_TO_MARK_READ_NOTIFICATIONS.value:"Failed to mark messages"}
+
 
 class ChangeAppointmentStatusDispatcher(MessageHandler):
     def handle(self, msg:Message) ->tuple:
@@ -650,7 +667,6 @@ class ChangeAppointmentStatusDispatcher(MessageHandler):
                 apps:dict = msg.data["appointments"]
                 
                 first_key = int(next(iter(apps)))
-                print(first_key)
                 cur.execute("""SELECT u.full_name, a.professional_id
                                 FROM appointments a
                                 JOIN professional p ON a.professional_id = p.user_id
@@ -939,13 +955,14 @@ with sqlite3.connect(DATABASE) as conn:
     #     """, (msg, is_read, created))
     
     
+    # cur.execute("""UPDATE notifications SET is_read = 0""")
+    
+    # conn.commit()
+    
     # appointments_to_insert = []
 
     # base_date = datetime.now()
-
-    # for i in range(12):
-    #     status = "Confirmed" if i < 5 else "Requested"
-        
+    # for i in range(12):        
     #     app_date = (base_date + timedelta(days=i)).strftime("%Y-%m-%d")
         
     #     appointments_to_insert.append((
@@ -956,12 +973,12 @@ with sqlite3.connect(DATABASE) as conn:
     #         "11:00",      # end_time
     #         "123 Main St, Tech City", # address
     #         f"Session number {i+1} regarding project details.", # details
-    #         status,       # status
+    #         "Requested",       # status
     #         None,         # cancel_reason (NULL)
-    #         datetime.now() # created_at
+    #         datetime.now().isoformat() # created_at
     #     ))
 
-    # # SQL Execution
+    # SQL Execution
     # for app in appointments_to_insert:
     #     cur.execute("""
     #         INSERT INTO appointments (
@@ -970,11 +987,11 @@ with sqlite3.connect(DATABASE) as conn:
     #         )
     #         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     #     """, app)
-    cur.execute("UPDATE appointments SET status='Requested'")
-    conn.commit()
-    # cur.execute("SELECT * FROM users")
-    # print(cur.fetchall())
-    # cur.execute("SELECT * FROM professional")
+    # conn.commit()
+    # cur.execute("DELETE FROM appointments")
+    # conn.commit()
+    
+    # cur.execute("SELECT * FROM appointments")
     # print(cur.fetchall())
     # cur.execute("""INSERT INTO notifications (user_id, message, is_read, created_at, from_id)
     # VALUES (13, 'You viewed the project files yesterday.', 1, '2026-03-14 15:30:00', 11)""")

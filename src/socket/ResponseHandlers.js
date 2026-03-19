@@ -115,7 +115,7 @@ export const handleUserInfoResponse = (dispatch, payload) =>{
             toInsert["notifications"] = accInfo["notifications"]
             dispatch(setUserInfo(toInsert)) 
             dispatch(appointmentsRecvd(accInfo["appointments"]))   
-            return [true, ""]
+            return [true, data["user_id"]]
         }
     }
 }
@@ -132,6 +132,20 @@ export const handleUpdatedAppointmentsResponse = (payload) =>{
         return [true, ""]
 }
 
+export const handleMarkedReadNotifications = (payload) =>{
+    const [notExist, msg] = CheckBROADErrors(payload)
+    if (!notExist){
+        return [notExist, msg]
+    }  
+    let data = payload.data
+    if (StatusMessage.MARKED_READ_NOTIFICATIONS in payload){
+        return [true, ""]
+    }  
+    else{
+        return [false, data[StatusMessage.FAILED_TO_MARK_READ_NOTIFICATIONS]]
+    }
+
+}
 
 
 export const handleProfileInfoResponse = (payload) => {

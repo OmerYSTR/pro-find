@@ -8,7 +8,7 @@ import time
 import sqlite3
 from collections import defaultdict
 
-MAX_MESSAGES = 5
+MAX_MESSAGES = 10
 TIME_WINDOW = 20 
 
 dispacher = MessageHandler.configure_dispatcher()

@@ -1,8 +1,8 @@
 // hooks/useUserSync.js
 import { useEffect } from "react";
-import { UserInfoRequest } from "../../socket/RequestHandler";
+import { UserInfoRequest, MarkReadNotificationsRequest } from "../../socket/RequestHandler";
 import webSocketParser from "../../socket/MsgParser";
-import { handleUserInfoResponse, handleProfileInfoResponse, handleUpdatedAppointmentsResponse } from "../../socket/ResponseHandlers";
+import { handleUserInfoResponse, handleProfileInfoResponse, handleUpdatedAppointmentsResponse, handleMarkedReadNotifications } from "../../socket/ResponseHandlers";
 import { logout } from "../../store/authSlice";
 import { MessageTypes } from "../../socket/MsgTypes";
 
@@ -33,6 +33,10 @@ export default function useUserSync(ws, token, dispatch, navigate, setViewedFree
                 if (!status) {
                     dispatch(logout());
                     navigate("/login");
+                }
+                else{
+                    const userId = info.data.user_id;
+                    MarkReadNotificationsRequest(ws, userId, token)
                 }}
             else if (MessageTypes.GET_PUBLIC_PROFILE_INFO === info.type){
                 const [status, data] = handleProfileInfoResponse(info) 
@@ -49,12 +53,18 @@ export default function useUserSync(ws, token, dispatch, navigate, setViewedFree
                     console.log("Error occured")
                 }
             }
+            else if(MessageTypes.MARK_READ_NOTIFICATION === info.type){
+                const [status, data] = handleMarkedReadNotifications(info)
+                if (!status){
+                    console.log("Didn't manage to mark notifications as read - ", data)
+                }
+            }
         };
 
         ws.addEventListener("message", handleMessage);
 
         return () => {
-            ws.removeEventListener("open", sendRequest);
+            ws.removeEventListener("open", handleOpen);
             ws.removeEventListener("message", handleMessage);
         };
     }, [ws, token, dispatch, navigate]);
