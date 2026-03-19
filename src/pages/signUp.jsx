@@ -315,6 +315,18 @@ Self description - ${freelancerInfo.description }
 
             <InputField name={"description"} value={freelancerInfo.description} onChange={handleChange} placeholder={"Description"}/>
 
+            <SingleChoiceDropDownMenu 
+            name={"hourPrice"} 
+            options={Array.from({length:1001}, (_,i) => i)}
+            value={freelancerInfo.hourPrice} 
+            onChange={(pricePicked) => setFreeLancerInfo(prev => ({
+                          ...prev, 
+                          hourPrice: pricePicked 
+                        }))}
+            placeholder={"Price per hour $$$$"}
+            customWidth={widthForBigDropDowns}/>
+            
+              
               {passwordMismatch && (
                 <ErrorMessage message={"Passwords do not match"}/>
               )}
@@ -359,7 +371,8 @@ export default function SignUpPage() {
       startWorking: "",
       finishWorking:"",
       jobDuration:0,
-      description: ""
+      description: "",
+      hourPrice:""
   });
 
   const [serverError, setServerError] = useState("");

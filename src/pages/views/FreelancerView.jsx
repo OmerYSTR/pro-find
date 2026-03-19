@@ -1,11 +1,27 @@
-import { WelcomeBack, NotificationsView, UpcomingAppointmentsView, PendingAppointments, FreelancerInfo } from "./HelpModule"
+import { WelcomeBack, WelcomeTo, NotificationsView, UpcomingAppointmentsView, PendingAppointments, FreelancerInfo } from "./HelpModule"
 import { useSelector } from "react-redux"
 import { Link } from "react-router-dom"
 import { useRef, useState } from "react"
 import { useSocket } from "../../socket/SocketContext"
 
 function FreelancerPublic({ user }){
-    return (<p>Public</p>)
+
+    const username = user.username
+    const job = user.job 
+    const cities = user.cities
+    const description = user.description
+    const years = user.years
+    const jobDuration = user.job_duration
+    const rating = user.rating
+    const price = user.price
+
+    return (
+        <div  className="p-8 max-w-6xl mx-auto animate-fadeIn space-y-8">
+            <WelcomeTo username={username}/>
+
+            <FreelancerInfo profession={job} serviceCities={cities}  description={description} years_experience={years} jobDuration={jobDuration} rating={rating} pricePerHour={price} />
+        </div>
+    )
 }
 
 function FreelancerPrivate(){
@@ -29,7 +45,7 @@ function FreelancerPrivate(){
             <WelcomeBack username={username}/>
 
 
-            <FreelancerInfo profession={userInfo?.job} serviceCities={userInfo?.cities} description={userInfo?.description} years_experience={userInfo?.years} jobDuration={userInfo?.job_duration} rating={userInfo?.rating} />
+            <FreelancerInfo profession={userInfo?.job} serviceCities={userInfo?.cities} description={userInfo?.description} years_experience={userInfo?.years} jobDuration={userInfo?.job_duration} rating={userInfo?.rating} pricePerHour={userInfo?.hour_price} />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-slate-800/50 border-l-4 border-purple-500 p-6 rounded-xl shadow-lg backdrop-blur-sm">

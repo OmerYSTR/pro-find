@@ -138,7 +138,7 @@ export const handleMarkedReadNotifications = (payload) =>{
         return [notExist, msg]
     }  
     let data = payload.data
-    if (StatusMessage.MARKED_READ_NOTIFICATIONS in payload){
+    if (StatusMessage.MARKED_READ_NOTIFICATIONS in data){
         return [true, ""]
     }  
     else{

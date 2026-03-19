@@ -1,6 +1,10 @@
 import { useState } from "react";
-import { Info, Check, X, Briefcase, MapPin, AlignLeft, Calendar, Star, Clock, FileText, User} from "lucide-react"
+import { Info, Check, X, Briefcase, MapPin, AlignLeft, Calendar, Star, Clock, FileText, User, DollarSign} from "lucide-react"
 import { UpdateAppointmentsStatusRequest } from "../../socket/RequestHandler";
+
+
+
+
 
 export function WelcomeBack({ username }){
     return (<>
@@ -13,6 +17,22 @@ export function WelcomeBack({ username }){
                 </p>
             </header>
     </>)
+}
+
+
+export function WelcomeTo({ username }){
+  return (
+    <>
+      <header>
+          <h1 className="text-4xl font-extrabold text-white tracking-tight">
+              Freelancer Page
+          </h1>
+          <p className="text-lg text-slate-400 mt-2">
+              Welcome to <span className="text-blue-400 font-semibold">{username}</span>'s page
+          </p>
+      </header>
+    </>
+  )
 }
 
 
@@ -205,7 +225,7 @@ export function PendingAppointments({ appointments = [], ws, token }) {
 }
 
 
-export function FreelancerInfo({ profession, serviceCities, description, years_experience, jobDuration, rating }){
+export function FreelancerInfo({ profession, serviceCities, description, years_experience, jobDuration, rating, pricePerHour }){
     return (
         <div className="bg-slate-800/40 border border-slate-700 p-8 rounded-3xl shadow-2xl backdrop-blur-md animate-fadeIn">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -222,6 +242,17 @@ export function FreelancerInfo({ profession, serviceCities, description, years_e
                     <p className="text-blue-400 text-sm uppercase font-bold tracking-widest">Experience</p>
                     <p className="text-white text-xl font-bold">{years_experience} Years</p>
                 </div>
+                
+                {pricePerHour > 0 && (
+                        <div className="bg-green-600/20 border border-green-500/30 px-5 py-2 rounded-2xl flex items-center gap-3">
+                            <DollarSign className="w-8 h-8 text-green-400" />
+                            <div>
+                                <p className="text-green-400 text-sm uppercase font-bold tracking-widest">Rate</p>
+                                <p className="text-white text-xl font-bold">${pricePerHour}/hr</p>
+                            </div>
+                        </div>
+                )}
+
             </div>
 
             <hr className="border-slate-700/50 mb-8" />

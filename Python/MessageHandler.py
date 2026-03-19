@@ -257,10 +257,10 @@ class FreelancerSignUpService(MessageHandler):
                 
                 cur.execute("""INSERT INTO pending_users (full_name, email, password_hash,
                             salt, user_type, profession, cities, years, job_duration, description, start_working, 
-                            finish_working, verification_code, expires_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", 
+                            finish_working, verification_code, expires_at, hour_price) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", 
                             (data["name"],data["email"], password_hash, salt, data["role"], data["profession"], 
                             cities, data["years"], data["jobDuration"], data["description"],data["startWorking"], 
-                            data["finishWorking"], ver.verification_code, ver.expires_at))
+                            data["finishWorking"], ver.verification_code, ver.expires_at, data["hourPrice"]))
                        
                 if not ver.send_verification_code():
                     conn.rollback()
@@ -320,7 +320,7 @@ class VerificationDispatcher(MessageHandler):
                 elif role == "Freelancer":
                     cur.execute("""SELECT full_name, password_hash, salt, user_type, 
                                 profession, cities, years, job_duration, description, 
-                                start_working, finish_working 
+                                start_working, finish_working, hour_price 
                                 FROM pending_users 
                                 WHERE email=?""",(email,))
                     row = cur.fetchone()
@@ -329,15 +329,15 @@ class VerificationDispatcher(MessageHandler):
                         return False
                     
                     (name, password_hash, salt, user_type, profession, cities, 
-                     years, job_duration, description, start_working, finish_working) = row
+                     years, job_duration, description, start_working, finish_working, hour_price) = row
 
                     cur.execute("""INSERT INTO users (full_name, email, password_hash, user_type, salt) 
                                 VALUES (?,?,?,?,?)""", (name, email, password_hash, user_type, salt))
                     id = cur.lastrowid
                     
                     cur.execute("""INSERT INTO professional (user_id, profession, service_cities,
-                                description, years_experience, avg_job_duration, start_time, end_time)
-                                VALUES (?,?,?,?,?,?,?,?)""", (id, profession, cities, description, years, job_duration, start_working, finish_working))
+                                description, years_experience, avg_job_duration, start_time, end_time, hour_price)
+                                VALUES (?,?,?,?,?,?,?,?,?)""", (id, profession, cities, description, years, job_duration, start_working, finish_working, hour_price))
                 
                 cur.execute("DELETE FROM pending_users WHERE email=?",(email,))
                 conn.commit()
@@ -507,11 +507,11 @@ class UserInfoDispatcher(MessageHandler):
                 payload_to_send = {"name":name, "role":role}
                 
                 if role=="Freelancer":
-                    cur.execute("SELECT profession, service_cities, description, years_experience, rating, start_time, end_time, avg_job_duration FROM professional WHERE user_id=?",(id,))
+                    cur.execute("SELECT profession, service_cities, description, years_experience, rating, start_time, end_time, avg_job_duration, hour_price FROM professional WHERE user_id=?",(id,))
                     row = cur.fetchone()
                     if not row:
                         return MessageTypes.GET_USER_INFO, {StatusMessage.FAILED_TO_GET_USER_INFO.value:"Couldn't find user"}
-                    profession, cities, description, years_experience, rating, start, end, job_duration = row
+                    profession, cities, description, years_experience, rating, start, end, job_duration, hour_price = row
                     
                     try:    
                         h, m = map(int, job_duration.split(':'))
@@ -523,7 +523,7 @@ class UserInfoDispatcher(MessageHandler):
                     except:
                         pass
                     
-                    payload_to_send.update({"job":profession, "cities":cities, "description":description, "years":years_experience, "rating":rating, "start_working":start, "end_working":end, "job_duration":job_duration})
+                    payload_to_send.update({"job":profession, "cities":cities, "description":description, "years":years_experience, "rating":rating, "start_working":start, "end_working":end, "job_duration":job_duration, "hour_price":hour_price})
                 
                     
                 appointments = self._get_appointments(id, cur, role)
@@ -804,6 +804,17 @@ class FreelancerSignUpValidator(Validator):
             if data["role"] not in ["Freelancer", "User"]:
                 return status, {error_message:"No such user type"}
             
+            if type(data["hourPrice"]) != int:
+                return status,{error_message:"price per hour is not in correct format "}
+            
+            if data["hourPrice"] > 1000:
+                return status, {error_message, "your wage is to expensive for this site"}
+            
+            if len(data["description"]) > 500:
+                return status, {error_message:f"Description must be less then 500 characters, yours is {len(data['description'])}"}
+                
+            
+            
             status = True
             return status, {StatusMessage.SIGNING_UP.value:""}
         except Exception as e:
@@ -978,7 +989,6 @@ with sqlite3.connect(DATABASE) as conn:
     #         datetime.now().isoformat() # created_at
     #     ))
 
-    # SQL Execution
     # for app in appointments_to_insert:
     #     cur.execute("""
     #         INSERT INTO appointments (
@@ -988,12 +998,11 @@ with sqlite3.connect(DATABASE) as conn:
     #         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     #     """, app)
     # conn.commit()
-    # cur.execute("DELETE FROM appointments")
-    # conn.commit()
-    
-    # cur.execute("SELECT * FROM appointments")
+
+    # cur.execute("SELECT * FROM professional")
     # print(cur.fetchall())
     # cur.execute("""INSERT INTO notifications (user_id, message, is_read, created_at, from_id)
     # VALUES (13, 'You viewed the project files yesterday.', 1, '2026-03-14 15:30:00', 11)""")
     # conn.commit()
+    
 #endregion

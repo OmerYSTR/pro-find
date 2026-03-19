@@ -29,6 +29,7 @@ customer
 | rating                     |
 | start_time                 |
 | end_time                   |
+| hour_price                 |
 +----------------------------+
 
 +--------------------------------------+
@@ -119,6 +120,7 @@ customer
 | description (NULL if User)                |
 | start_working(NULL if User)               |
 | finish_working (NULL if User)             |
+| hour_price                                |
 |                                           |
 | verification_code                         |
 | expires_at                                |
