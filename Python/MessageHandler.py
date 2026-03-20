@@ -95,6 +95,7 @@ def configure_dispatcher() -> MessageDispatcher:
     d.register(MessageTypes.GET_USER_INFO.value, UserInfoDispatcher)
     d.register(MessageTypes.UPDATE_APPOINTMENTS_STATUS.value, ChangeAppointmentStatusDispatcher)
     d.register(MessageTypes.MARK_READ_NOTIFICATION.value, MarkNotificationsReadDispatcher)
+    d.register(MessageTypes.MAKE_APPOINTMENT.value, BookAppointmentDispatcher)
     
     return d
         
@@ -709,7 +710,26 @@ class ChangeAppointmentStatusDispatcher(MessageHandler):
             conn.rollback()
             print(f"Appointment Status change dispatcher - {e}")
             return MessageTypes.UPDATE_APPOINTMENTS_STATUS, {StatusMessage.FAILED_TO_UPDATE_APP_STATUS.value:"Something went wrong"}
-            
+        
+
+#Message example - {'app': 
+# {'date': '2026-03-21', 
+# 'start_time': '08:00', 
+# 'end_time': '10:30', 
+# 'address': '1', 
+# 'details': ''}}  
+class BookAppointmentDispatcher(MessageHandler):
+    def handle(self, msg:Message) ->tuple:
+        try:
+            with sqlite3.connect(DATABASE) as conn:
+                cur = conn.cursor()
+                data = msg.data
+                               
+                
+                
+        except Exception as e:
+            print("Appointment booking dispatcher exception - ",e)
+            return MessageTypes.MAKE_APPOINTMENT, {StatusMessage.FAILED_TO_BOOK_APPOINTMENT.value:"Failed to make the appointment, try again later"}    
             
 #endregion
 
@@ -999,8 +1019,8 @@ with sqlite3.connect(DATABASE) as conn:
     #     """, app)
     # conn.commit()
 
-    # cur.execute("SELECT * FROM professional")
-    # print(cur.fetchall())
+    cur.execute("SELECT * FROM appointments")
+    print(cur.fetchall())
     # cur.execute("""INSERT INTO notifications (user_id, message, is_read, created_at, from_id)
     # VALUES (13, 'You viewed the project files yesterday.', 1, '2026-03-14 15:30:00', 11)""")
     # conn.commit()

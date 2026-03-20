@@ -90,8 +90,16 @@ export function MarkReadNotificationsRequest(ws, userId, token){
 }
 
 
+
 export function GetPublicProfileInfoRequest(ws, targetId){
     return;
+}
+
+
+export function BookAppointment(ws, app, token){
+    let payload = {"app":app}
+    let msg = MsgBuild(MessageTypes.MAKE_APPOINTMENT, payload, token, "JSON")
+    ws.send(msg)
 }
 
 //#endregion

@@ -8,12 +8,11 @@ import { MessageTypes } from "../../socket/MsgTypes";
 
 
 
-export default function useUserSync(ws, token, dispatch, navigate, setViewedFreelancer) {
+export default function useUserSync(ws, token, dispatch, navigate, setViewedFreelancer, isPublic=false) {
     useEffect(() => {
 
         if (!ws || !token) return;
-
-        const sendRequest = () =>{ UserInfoRequest(ws, token);}
+        const sendRequest = () =>{ if (!isPublic) {UserInfoRequest(ws, token);}}
 
 
         const handleOpen = () => sendRequest()
@@ -67,5 +66,5 @@ export default function useUserSync(ws, token, dispatch, navigate, setViewedFree
             ws.removeEventListener("open", handleOpen);
             ws.removeEventListener("message", handleMessage);
         };
-    }, [ws, token, dispatch, navigate]);
+    }, [ws, token, dispatch, navigate, isPublic]);
 }

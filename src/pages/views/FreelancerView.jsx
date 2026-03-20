@@ -1,11 +1,27 @@
-import { WelcomeBack, WelcomeTo, NotificationsView, UpcomingAppointmentsView, PendingAppointments, FreelancerInfo } from "./HelpModule"
+import { WelcomeBack, WelcomeTo, NotificationsView, UpcomingAppointmentsView, PendingAppointments, FreelancerInfo, AppointmentBooking } from "./ViewModule"
 import { useSelector } from "react-redux"
 import { Link } from "react-router-dom"
-import { useRef, useState } from "react"
+import { useRef, useState, useEffect } from "react"
 import { useSocket } from "../../socket/SocketContext"
+import { Calendar } from "lucide-react"
+import { BookAppointment } from "../../socket/RequestHandler"
 
-function FreelancerPublic({ user }){
-
+function FreelancerPublic({ user, ws, token }){
+    const mockAvailability = {
+    "2026-03-20": ["14:00", "15:30", "16:00", "17:00"],
+    
+    "2026-03-21": [
+        "08:00", "09:00", "10:00", "11:00", 
+        "13:00", "14:00", "15:00", "16:00"
+    ],
+    
+    "2026-03-23": ["12:00", "13:00"],
+    
+    "2026-03-24": ["18:00", "19:00", "20:00"],
+    
+    "2026-03-25": ["09:30", "10:30", "14:30", "15:30"]
+    };
+    const profId = user.id
     const username = user.username
     const job = user.job 
     const cities = user.cities
@@ -15,20 +31,52 @@ function FreelancerPublic({ user }){
     const rating = user.rating
     const price = user.price
 
-    return (
-        <div  className="p-8 max-w-6xl mx-auto animate-fadeIn space-y-8">
-            <WelcomeTo username={username}/>
+    const [makeAppointment, setMakeAppointment] = useState(false)
 
-            <FreelancerInfo profession={job} serviceCities={cities}  description={description} years_experience={years} jobDuration={jobDuration} rating={rating} pricePerHour={price} />
-        </div>
+    const [app, setApp] = useState(null)
+   
+    useEffect(() => {
+        if (!app) {return;}
+        else{BookAppointment(ws, app, token);}
+    }, [app])
+
+
+    return (<>
+
+            { !makeAppointment ? (
+                    <div  className="p-8 max-w-6xl mx-auto animate-fadeIn space-y-8">
+                        <WelcomeTo username={username}/>
+
+                        <FreelancerInfo profession={job} serviceCities={cities}  description={description} years_experience={years} jobDuration={jobDuration} rating={rating} pricePerHour={price} />
+                    
+                    
+                        <button
+                        onClick={() => setMakeAppointment(true)} 
+                        className="mt-8 w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 
+                        hover:to-indigo-500 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/20 transition-all 
+                        duration-300 transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3 group">
+                            <Calendar className="w-5 h-5 group-hover:animate-pulse" />
+                            <span>Make Appointment</span>
+                        </button>
+                    </div>
+                ) : (
+                    <AppointmentBooking 
+                    availability={mockAvailability} 
+                    jobDuration={jobDuration} 
+                    onConfirm={(app) => setApp(app)} 
+                    onCancel={() => setMakeAppointment(false)}
+                    price={price}/>
+                )   
+            }   
+        </>
     )
 }
 
-function FreelancerPrivate(){
+
+
+function FreelancerPrivate({ws, token}){
     const acceptAppointmentsRef = useRef(null);
     const scrollToRef = () =>(acceptAppointmentsRef.current?.scrollIntoView({behavior:"smooth"}))
-    const ws = useSocket()
-    const token = useSelector((state) => state.auth.userToken)
 
 
     const userInfo = useSelector((state) => state.auth.userInfo)
@@ -105,13 +153,15 @@ function FreelancerPrivate(){
 
 
 export default function FreelancerView({ user, isPublic}){
+    const ws = useSocket()
+    const token = useSelector((state) => state.auth.userToken)
 
     return (
         <>
             {isPublic ? (
-                <FreelancerPublic user={user}/>
+                <FreelancerPublic user={user} ws={ws} token={token}/>
             ): (
-                <FreelancerPrivate/>
+                <FreelancerPrivate ws={ws} token={token}/>
             )
             }
         </>

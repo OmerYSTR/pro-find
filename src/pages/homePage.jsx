@@ -10,7 +10,7 @@ import UserView from "./views/UserView";
 import useUserSync from "./hooks/UserInfo";
 
 
-export default function HomePage() {
+export default function HomePage({isPublic=false}) {
     const ws = useSocket();
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -29,7 +29,7 @@ export default function HomePage() {
         "price":100,
     });
 
-    useUserSync(ws, token, dispatch, navigate, setViewedFreelancer);
+    useUserSync(ws, token, dispatch, navigate, setViewedFreelancer, isPublic);
 
     const isLoaded = authUser && Object.keys(authUser).length > 0;
     

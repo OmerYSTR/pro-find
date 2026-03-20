@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { Info, Check, X, Briefcase, MapPin, AlignLeft, Calendar, Star, Clock, FileText, User, DollarSign} from "lucide-react"
+import { CalendarIcon, CheckCircle, Info, Check, X, Briefcase, MapPin, AlignLeft, Calendar, Star, Clock, FileText, User, DollarSign} from "lucide-react"
 import { UpdateAppointmentsStatusRequest } from "../../socket/RequestHandler";
-
 
 
 
@@ -354,3 +353,208 @@ export function AppointmentDetailModal({ appointment, onClose }) {
     </div>
   );
 }
+
+
+export function AppointmentBooking({ availability, jobDuration, onConfirm, onCancel, price }) {
+    const [selectedDate, setSelectedDate] = useState('');
+    const [selectedTime, setSelectedTime] = useState('');
+    const [formData, setFormData] = useState({
+        address: '',
+        details: ''
+    });
+
+
+  const parseDurationToHours = (durationStr) => {
+      if (!durationStr) return 0;
+      const hours = parseInt(durationStr.match(/(\d+)h/)?.[1] || 0);
+      const mins = parseInt(durationStr.match(/(\d+)m/)?.[1] || 0);
+      return hours + (mins / 60);
+  };
+
+  const calculateEndTime = (startTime, durationStr) => {
+      if (!startTime || !durationStr) return "";
+      
+      const [startH, startM] = startTime.split(':').map(Number);
+      const durationDecimal = parseDurationToHours(durationStr);
+      
+      const totalStartMinutes = (startH * 60) + startM;
+      const totalDurationMinutes = Math.round(durationDecimal * 60);
+      const totalEndMinutes = totalStartMinutes + totalDurationMinutes;
+      
+      const endH = Math.floor(totalEndMinutes / 60) % 24;
+      const endM = totalEndMinutes % 60;
+      
+      return `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`;
+  };
+
+
+    const availableDates = Object.keys(availability);
+    const timeSlots = selectedDate ? availability[selectedDate] : [];
+
+    const handleConfirm = () => {
+        if (!selectedDate || !selectedTime || !formData.address) {
+            alert("Please fill in all required fields");
+            return;
+        }
+
+        const endTime = calculateEndTime(selectedTime, jobDuration);
+
+        onConfirm({
+            date: selectedDate,
+            start_time: selectedTime,
+            end_time: endTime,
+            address: formData.address,
+            details: formData.details,
+        });
+    };
+
+  return (
+      <div className="bg-slate-800/60 border border-slate-700 p-8 rounded-3xl shadow-2xl backdrop-blur-xl animate-fadeIn space-y-8 max-w-2xl mx-auto">
+          <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+              <CalendarIcon className="text-blue-500" /> Book Appointment
+          </h2>
+
+          <div className="space-y-4">
+              <label className="text-slate-400 text-sm font-bold uppercase tracking-wider">Select Date</label>
+              <div className="flex flex-wrap gap-2">
+                  {availableDates.map(date => (
+                      <button
+                          key={date}
+                          onClick={() => { setSelectedDate(date); setSelectedTime(''); }}
+                          className={`px-4 py-2 rounded-xl border transition-all ${
+                              selectedDate === date 
+                              ? 'bg-blue-600 border-blue-400 text-white shadow-lg shadow-blue-500/20' 
+                              : 'bg-slate-900/40 border-slate-700 text-slate-300 hover:border-slate-500'
+                          }`}
+                      >
+                          {new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                      </button>
+                  ))}
+              </div>
+          </div>
+
+          {selectedDate && (
+              <div className="space-y-4 animate-fadeIn">
+                  <label className="text-slate-400 text-sm font-bold uppercase tracking-wider flex justify-between">
+                      Available Times 
+                      <span className="text-blue-400 lowercase font-normal italic">Duration: {jobDuration}</span>
+                  </label>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                      {timeSlots.map(time => (
+                          <button
+                              key={time}
+                              onClick={() => setSelectedTime(time)}
+                              className={`py-2 rounded-lg text-sm font-medium transition-all ${
+                                  selectedTime === time 
+                                  ? 'bg-indigo-600 text-white ring-2 ring-indigo-400' 
+                                  : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600'
+                              }`}
+                          >
+                              {time}
+                          </button>
+                      ))}
+                  </div>
+              </div>
+          )}
+
+          <div className="grid grid-cols-1 gap-6">
+              <div className="space-y-2">
+                  <label className="text-slate-400 text-sm font-bold uppercase tracking-wider flex items-center gap-2">
+                      <MapPin className="w-4 h-4" /> Service Address
+                  </label>
+                  <input 
+                      type="text"
+                      placeholder="123 Street Name, City"
+                      className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                      value={formData.address}
+                      onChange={(e) => setFormData({...formData, address: e.target.value})}
+                  />
+              </div>
+
+              <div className="space-y-2">
+                  <label className="text-slate-400 text-sm font-bold uppercase tracking-wider flex items-center gap-2">
+                      <AlignLeft className="w-4 h-4" /> Additional Details
+                  </label>
+                  <textarea 
+                      rows="3"
+                      placeholder="Gate codes, specific requirements..."
+                      className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                      value={formData.details}
+                      onChange={(e) => setFormData({...formData, details: e.target.value})}
+                  ></textarea>
+              </div>
+          </div>
+
+        {selectedDate && selectedTime && (
+          <div className="bg-slate-900/90 border-l-4 border-blue-500 rounded-2xl p-6 space-y-4 animate-fadeIn shadow-xl">
+              <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                  <h3 className="text-blue-400 text-xs font-bold uppercase tracking-widest">Appointment Summary</h3>
+                  <span className="bg-blue-500/10 text-blue-400 text-[10px] px-2 py-1 rounded-md border border-blue-500/20">
+                      {jobDuration} Service
+                  </span>
+              </div>
+              
+              <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                      <div className="p-2 bg-slate-800 rounded-lg">
+                          <Clock className="w-5 h-5 text-blue-400" />
+                      </div>
+                      <div>
+                          <p className="text-white font-bold text-lg">
+                              {selectedTime} — {calculateEndTime(selectedTime, jobDuration)}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                              {new Date(selectedDate).toLocaleDateString(undefined, { 
+                                  weekday: 'long', 
+                                  month: 'short', 
+                                  day: 'numeric' 
+                              })}
+                          </p>
+                      </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                      <div className="p-2 bg-slate-800 rounded-lg">
+                          <DollarSign className="w-5 h-5 text-green-400" />
+                      </div>
+                      <div>
+                          <p className="text-green-400 font-bold text-lg">
+                              ${(parseFloat(price) * parseDurationToHours(jobDuration)).toFixed(2)}
+                          </p>
+                          <p className="text-[10px] text-slate-500 uppercase tracking-tighter">
+                              Total Estimate (${price}/hr × {parseDurationToHours(jobDuration)} hrs)
+                          </p>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      )}
+
+          <div className="space-y-4">
+              <div className="flex items-start gap-3 p-4 bg-blue-500/5 border border-blue-500/20 rounded-2xl">
+                  <CheckCircle className="w-4 h-4 text-blue-400 mt-1" />
+                  <p className="text-slate-400 text-sm leading-relaxed">
+                      By confirming, you agree to the hourly fee of <span className="text-white font-bold">${price}</span>.
+                      <br/>By confirming you also agree to knowledge that<br/>Pro-Find is not accountable to any price changes the freelancer might impose
+                  </p>
+              </div>
+
+              <div className="flex gap-4">
+                  <button 
+                      onClick={onCancel}
+                      className="flex-1 py-4 border border-slate-700 text-slate-400 font-bold rounded-2xl hover:bg-slate-700/30 transition-all"
+                  >
+                      Cancel
+                  </button>
+                  
+                  <button 
+                      onClick={handleConfirm}
+                      className="flex-[2] py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold rounded-2xl shadow-lg flex items-center justify-center gap-2 transition-all transform hover:-translate-y-1"
+                  >
+                      <CheckCircle className="w-5 h-5" /> Confirm Booking
+                  </button>
+              </div>
+          </div>
+      </div>
+  );
+  }
