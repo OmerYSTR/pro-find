@@ -415,23 +415,31 @@ export function AppointmentBooking({ availability, jobDuration, onConfirm, onCan
           </h2>
 
           <div className="space-y-4">
-              <label className="text-slate-400 text-sm font-bold uppercase tracking-wider">Select Date</label>
-              <div className="flex flex-wrap gap-2">
-                  {availableDates.map(date => (
-                      <button
-                          key={date}
-                          onClick={() => { setSelectedDate(date); setSelectedTime(''); }}
-                          className={`px-4 py-2 rounded-xl border transition-all ${
-                              selectedDate === date 
-                              ? 'bg-blue-600 border-blue-400 text-white shadow-lg shadow-blue-500/20' 
-                              : 'bg-slate-900/40 border-slate-700 text-slate-300 hover:border-slate-500'
-                          }`}
-                      >
-                          {new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                      </button>
-                  ))}
-              </div>
-          </div>
+            <label className="text-slate-400 text-sm font-bold uppercase tracking-wider block text-center mb-2">
+                Select Date
+            </label>
+            
+            <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                {availableDates.map(date => (
+                    <button
+                        key={date}
+                        onClick={() => { setSelectedDate(date); setSelectedTime(''); }}
+                        className={`py-3 px-1 rounded-xl border text-sm font-medium transition-all ${
+                            selectedDate === date 
+                            ? 'bg-blue-600 border-blue-400 text-white shadow-lg shadow-blue-500/20' 
+                            : 'bg-slate-900/40 border-slate-700 text-slate-300 hover:border-slate-500'
+                        }`}
+                    >
+                        <span className="block text-[10px] uppercase opacity-60">
+                            {new Date(date).toLocaleDateString(undefined, { month: 'short' })}
+                        </span>
+                        <span className="text-base">
+                            {new Date(date).toLocaleDateString(undefined, { day: 'numeric' })}
+                        </span>
+                    </button>
+                ))}
+            </div>
+        </div>
 
           {selectedDate && (
               <div className="space-y-4 animate-fadeIn">
@@ -485,50 +493,64 @@ export function AppointmentBooking({ availability, jobDuration, onConfirm, onCan
               </div>
           </div>
 
-        {selectedDate && selectedTime && (
-          <div className="bg-slate-900/90 border-l-4 border-blue-500 rounded-2xl p-6 space-y-4 animate-fadeIn shadow-xl">
-              <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-                  <h3 className="text-blue-400 text-xs font-bold uppercase tracking-widest">Appointment Summary</h3>
-                  <span className="bg-blue-500/10 text-blue-400 text-[10px] px-2 py-1 rounded-md border border-blue-500/20">
-                      {jobDuration} Service
-                  </span>
-              </div>
-              
-              <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                      <div className="p-2 bg-slate-800 rounded-lg">
-                          <Clock className="w-5 h-5 text-blue-400" />
-                      </div>
-                      <div>
-                          <p className="text-white font-bold text-lg">
-                              {selectedTime} — {calculateEndTime(selectedTime, jobDuration)}
-                          </p>
-                          <p className="text-xs text-slate-500">
-                              {new Date(selectedDate).toLocaleDateString(undefined, { 
-                                  weekday: 'long', 
-                                  month: 'short', 
-                                  day: 'numeric' 
-                              })}
-                          </p>
-                      </div>
-                  </div>
+        {selectedDate && selectedTime && formData.address && (
+        <div className="bg-slate-900/90 border-l-4 border-blue-500 rounded-2xl p-6 space-y-4 animate-fadeIn shadow-xl">
+            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 className="text-blue-400 text-xs font-bold uppercase tracking-widest">Appointment Summary</h3>
+                <span className="bg-blue-500/10 text-blue-400 text-[10px] px-2 py-1 rounded-md border border-blue-500/20">
+                    {jobDuration} Service
+                </span>
+            </div>
+            
+            <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-slate-800 rounded-lg">
+                        <Clock className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <div>
+                        <p className="text-white font-bold text-lg">
+                            {selectedTime} — {calculateEndTime(selectedTime, jobDuration)}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                            {new Date(selectedDate).toLocaleDateString(undefined, { 
+                                weekday: 'long', 
+                                month: 'short', 
+                                day: 'numeric' 
+                            })}
+                        </p>
+                    </div>
+                </div>
 
-                  <div className="flex items-center gap-3">
-                      <div className="p-2 bg-slate-800 rounded-lg">
-                          <DollarSign className="w-5 h-5 text-green-400" />
-                      </div>
-                      <div>
-                          <p className="text-green-400 font-bold text-lg">
-                              ${(parseFloat(price) * parseDurationToHours(jobDuration)).toFixed(2)}
-                          </p>
-                          <p className="text-[10px] text-slate-500 uppercase tracking-tighter">
-                              Total Estimate (${price}/hr × {parseDurationToHours(jobDuration)} hrs)
-                          </p>
-                      </div>
-                  </div>
-              </div>
-          </div>
-      )}
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-slate-800 rounded-lg">
+                        <MapPin className="w-5 h-5 text-red-400" />
+                    </div>
+                    <div>
+                        <p className="text-white font-medium text-sm leading-tight">
+                            {formData.address}
+                        </p>
+                        <p className="text-[10px] text-slate-500 uppercase tracking-tighter">
+                            Service Location
+                        </p>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-slate-800 rounded-lg">
+                        <DollarSign className="w-5 h-5 text-green-400" />
+                    </div>
+                    <div>
+                        <p className="text-green-400 font-bold text-lg">
+                            ${(parseFloat(price) * parseDurationToHours(jobDuration)).toFixed(2)}
+                        </p>
+                        <p className="text-[10px] text-slate-500 uppercase tracking-tighter">
+                            Total Estimate (${price}/hr × {parseDurationToHours(jobDuration)} hrs)
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        )}
 
           <div className="space-y-4">
               <div className="flex items-start gap-3 p-4 bg-blue-500/5 border border-blue-500/20 rounded-2xl">

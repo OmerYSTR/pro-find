@@ -47,7 +47,7 @@ customer
 |               appointments                |
 +-------------------------------------------+
 | PK id                                     |
-| FK professional_id → PROFESSIONALS.id     |
+| FK professional_id → USERS.id             |
 | FK customer_id → USERS.id                 |
 | date                                      |
 | start_time                                |

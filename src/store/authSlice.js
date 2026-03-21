@@ -20,9 +20,10 @@ const authSlice = createSlice({
             state.notifications = info.payload.notifications
         },
         logout(state){
-            state.usesrInfo = {};
+            state.userInfo = {};
             state.userToken = "";
             state.loggedIn=false;
+            state.notifications=[];
         }
     }
 

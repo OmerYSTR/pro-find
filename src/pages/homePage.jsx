@@ -18,7 +18,10 @@ export default function HomePage({isPublic=false}) {
     const authUser = useSelector((state) => state.auth.userInfo);
     const token = useSelector((state) => state.auth.userToken);
 
+    const [appointmentTimes, setAppointmentTimes] = useState(null)
+
     const [viewedFreelancer, setViewedFreelancer] = useState({
+        "id":11,
         "username":"Omer Yaffet Stern",
         "job":"Cyber Security Analyst",
         "cities":"Kfar Saba, Ra'anana",
@@ -29,18 +32,19 @@ export default function HomePage({isPublic=false}) {
         "price":100,
     });
 
-    useUserSync(ws, token, dispatch, navigate, setViewedFreelancer, isPublic);
+    useUserSync(ws, token, dispatch, navigate, setViewedFreelancer, setAppointmentTimes, isPublic);
 
     const isLoaded = authUser && Object.keys(authUser).length > 0;
     
     if (!isLoaded) return <LoadingScreen />;
-
+    
     const renderContent = () => {
         if (authUser.role === "User" && viewedFreelancer) {
             return (
                 <FreelancerView 
                     user={viewedFreelancer} 
                     isPublic={true} 
+                    appointmentTimes = {appointmentTimes}
                 />
             );
         }

@@ -2,13 +2,11 @@
 import { useEffect } from "react";
 import { UserInfoRequest, MarkReadNotificationsRequest } from "../../socket/RequestHandler";
 import webSocketParser from "../../socket/MsgParser";
-import { handleUserInfoResponse, handleProfileInfoResponse, handleUpdatedAppointmentsResponse, handleMarkedReadNotifications } from "../../socket/ResponseHandlers";
+import { handleUserInfoResponse, handleProfileInfoResponse, handleUpdatedAppointmentsResponse, handleMarkedReadNotifications, handleAppointmentTimes } from "../../socket/ResponseHandlers";
 import { logout } from "../../store/authSlice";
-import { MessageTypes } from "../../socket/MsgTypes";
+import { MessageTypes, StatusMessage } from "../../socket/MsgTypes";
 
-
-
-export default function useUserSync(ws, token, dispatch, navigate, setViewedFreelancer, isPublic=false) {
+export default function useUserSync(ws, token, dispatch, navigate, setViewedFreelancer, setAppointmentTimes, isPublic=false) {
     useEffect(() => {
 
         if (!ws || !token) return;
@@ -37,12 +35,14 @@ export default function useUserSync(ws, token, dispatch, navigate, setViewedFree
                     const userId = info.data.user_id;
                     MarkReadNotificationsRequest(ws, userId, token)
                 }}
+           
             else if (MessageTypes.GET_PUBLIC_PROFILE_INFO === info.type){
                 const [status, data] = handleProfileInfoResponse(info) 
                 if (status){
                     setViewedFreelancer(data)
                 }
             }
+           
             else if(MessageTypes.UPDATE_APPOINTMENTS_STATUS === info.type){
                 const [status, data] = handleUpdatedAppointmentsResponse(info)
                 if (status){
@@ -52,10 +52,29 @@ export default function useUserSync(ws, token, dispatch, navigate, setViewedFree
                     console.log("Error occured")
                 }
             }
+            
             else if(MessageTypes.MARK_READ_NOTIFICATION === info.type){
                 const [status, data] = handleMarkedReadNotifications(info)
                 if (!status){
                     console.log("Didn't manage to mark notifications as read - ", data)
+                }
+            }
+
+            else if(MessageTypes.GET_APPOINTMENT_TIMES === info.type){
+                const [status, msg] = handleAppointmentTimes(info)
+                if (status){
+                    setAppointmentTimes(msg)
+                    console.log(msg)
+                }
+                else
+                    setAppointmentTimes(null)
+            }
+
+            else if (MessageTypes.BROAD === info.type){
+                if (StatusMessage.TOKEN_BAD in info.data){
+                    alert("Your session has ended, login again to get service")
+                    dispatch(logout())
+                    navigate('/login')
                 }
             }
         };
@@ -66,5 +85,5 @@ export default function useUserSync(ws, token, dispatch, navigate, setViewedFree
             ws.removeEventListener("open", handleOpen);
             ws.removeEventListener("message", handleMessage);
         };
-    }, [ws, token, dispatch, navigate, isPublic]);
+    }, [ws, token]);
 }

@@ -10,6 +10,8 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from token_handler import is_token_valid, create_token, decode
+from collections import defaultdict
+
 
 #region Consts
 DATABASE = r"C:\Coding\pro-find\Python\my_app.db"
@@ -95,6 +97,7 @@ def configure_dispatcher() -> MessageDispatcher:
     d.register(MessageTypes.GET_USER_INFO.value, UserInfoDispatcher)
     d.register(MessageTypes.UPDATE_APPOINTMENTS_STATUS.value, ChangeAppointmentStatusDispatcher)
     d.register(MessageTypes.MARK_READ_NOTIFICATION.value, MarkNotificationsReadDispatcher)
+    d.register(MessageTypes.GET_APPOINTMENT_TIMES.value, AppointmentStartTimesDispatcher)
     d.register(MessageTypes.MAKE_APPOINTMENT.value, BookAppointmentDispatcher)
     
     return d
@@ -711,6 +714,72 @@ class ChangeAppointmentStatusDispatcher(MessageHandler):
             print(f"Appointment Status change dispatcher - {e}")
             return MessageTypes.UPDATE_APPOINTMENTS_STATUS, {StatusMessage.FAILED_TO_UPDATE_APP_STATUS.value:"Something went wrong"}
         
+#"2026-03-20": ["14:00", "15:30", "16:00", "17:00"]
+
+class AppointmentStartTimesDispatcher(MessageHandler):
+    def handle(self, msg:Message) ->tuple:
+        try:
+            with sqlite3.connect(DATABASE) as conn:
+                cur = conn.cursor()
+                pro_id = msg.data["id"]
+                
+                cur.execute("SELECT avg_job_duration, start_time, end_time FROM professional WHERE user_id=?", (pro_id,))
+                row = cur.fetchone()
+                if not row:
+                    return MessageTypes.GET_APPOINTMENT_TIMES, {StatusMessage.FAILED_TO_GET_APPOINTMENT_TIMES.value:"Couldn't find freelancer"}
+                
+                job_duration, start_time, end_time = row                
+                 
+                cur.execute("""SELECT start_time, date FROM appointments WHERE professional_id=? 
+                            AND date BETWEEN date('now') AND date('now', '+1 month') 
+                            AND status='Confirmed' ORDER BY date ASC; """, (pro_id,))
+                
+                appointments = cur.fetchall()
+                
+                existing_appointments = defaultdict(list)
+
+                if appointments:
+                    for row in appointments:
+                        time = row[0]
+                        date =row[1]
+                        existing_appointments[date].append(time)
+                    existing_appointments = dict(existing_appointments)
+                    
+                h,m = map(int, job_duration.split(":"))
+                duration_minutes = (h*60) + m
+                    
+                app_times = {}
+                current_date = datetime.now()            
+                
+                for _ in range(0, 35):
+                    date_str = current_date.strftime("%Y-%m-%d")
+                    booked_slots = existing_appointments.get(date_str, [])
+                    app_times[date_str] = self._calculate_free_day_working_hours(start_time, end_time, duration_minutes, booked_slots)
+                    current_date = current_date+timedelta(days=1)
+                    
+                    
+                return MessageTypes.GET_APPOINTMENT_TIMES, {StatusMessage.GOT_APPOINTMENT_TIMES.value:app_times}
+        except Exception as e:
+            print("Appointment time dispatcher error - ", e)
+            return MessageTypes.GET_APPOINTMENT_TIMES, {StatusMessage.FAILED_TO_GET_APPOINTMENT_TIMES.value:"Issue fetching the appointment dates and times"}
+
+    
+    def _calculate_free_day_working_hours(self, start_time, end_time, job_duration, existing_appointments=[]) ->list:
+        format = "%H:%M"
+        current_slot = datetime.strptime(start_time, format)
+        end_of_day = datetime.strptime(end_time, format)
+        
+        available_times = []
+        while current_slot+timedelta(minutes=job_duration) <= end_of_day:
+            slot_str = current_slot.strftime(format)
+            
+            if slot_str not in existing_appointments:
+                available_times.append(slot_str)
+                
+            current_slot+= timedelta(minutes=job_duration)
+        
+        return available_times
+        
 
 #Message example - {'app': 
 # {'date': '2026-03-21', 
@@ -724,7 +793,7 @@ class BookAppointmentDispatcher(MessageHandler):
             with sqlite3.connect(DATABASE) as conn:
                 cur = conn.cursor()
                 data = msg.data
-                               
+                   
                 
                 
         except Exception as e:
@@ -1019,8 +1088,10 @@ with sqlite3.connect(DATABASE) as conn:
     #     """, app)
     # conn.commit()
 
-    cur.execute("SELECT * FROM appointments")
-    print(cur.fetchall())
+    # cur.execute("SELECT * FROM professional WHERE user_id = '11'")
+    # print(cur.fetchall())
+    # cur.execute("SELECT * FROM appointments")
+    # print(cur.fetchall())
     # cur.execute("""INSERT INTO notifications (user_id, message, is_read, created_at, from_id)
     # VALUES (13, 'You viewed the project files yesterday.', 1, '2026-03-14 15:30:00', 11)""")
     # conn.commit()

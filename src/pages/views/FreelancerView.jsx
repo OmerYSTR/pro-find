@@ -4,9 +4,11 @@ import { Link } from "react-router-dom"
 import { useRef, useState, useEffect } from "react"
 import { useSocket } from "../../socket/SocketContext"
 import { Calendar } from "lucide-react"
-import { BookAppointment } from "../../socket/RequestHandler"
+import { BookAppointment, GetAvailableWorkTimes } from "../../socket/RequestHandler"
+import LoadingScreen from "./LoadingScreen"
 
-function FreelancerPublic({ user, ws, token }){
+
+function FreelancerPublic({ user, ws, token, appointmentTimes }){
     const mockAvailability = {
     "2026-03-20": ["14:00", "15:30", "16:00", "17:00"],
     
@@ -40,6 +42,11 @@ function FreelancerPublic({ user, ws, token }){
         else{BookAppointment(ws, app, token);}
     }, [app])
 
+    useEffect(() =>{
+        if (makeAppointment){
+            GetAvailableWorkTimes(ws, profId, token)
+        }
+    }, [makeAppointment])
 
     return (<>
 
@@ -59,13 +66,17 @@ function FreelancerPublic({ user, ws, token }){
                             <span>Make Appointment</span>
                         </button>
                     </div>
-                ) : (
+                ) : (appointmentTimes ? (
+
                     <AppointmentBooking 
-                    availability={mockAvailability} 
+                    availability={appointmentTimes} 
                     jobDuration={jobDuration} 
                     onConfirm={(app) => setApp(app)} 
                     onCancel={() => setMakeAppointment(false)}
                     price={price}/>
+
+                    ) : (<LoadingScreen/>)
+
                 )   
             }   
         </>
@@ -152,14 +163,14 @@ function FreelancerPrivate({ws, token}){
 
 
 
-export default function FreelancerView({ user, isPublic}){
+export default function FreelancerView({ user, isPublic, appointmentTimes}){
     const ws = useSocket()
     const token = useSelector((state) => state.auth.userToken)
 
     return (
         <>
             {isPublic ? (
-                <FreelancerPublic user={user} ws={ws} token={token}/>
+                <FreelancerPublic user={user} ws={ws} token={token} appointmentTimes={appointmentTimes}/>
             ): (
                 <FreelancerPrivate ws={ws} token={token}/>
             )

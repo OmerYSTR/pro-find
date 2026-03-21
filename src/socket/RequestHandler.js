@@ -2,6 +2,7 @@ import MsgBuild from "./MsgBuilder"
 import {useSocket} from '../socket/SocketContext'
 import { MessageTypes } from "./MsgTypes"
 import {useSelector} from 'react-redux'
+import { MousePointerBan } from "lucide-react"
 
 //#region Login
 export function LoginRequest(username, password, ws, token=""){
@@ -91,14 +92,23 @@ export function MarkReadNotificationsRequest(ws, userId, token){
 
 
 
-export function GetPublicProfileInfoRequest(ws, targetId){
+export function GetPublicProfileInfoRequest(ws, targetId, token){
     return;
 }
+
+
+export function GetAvailableWorkTimes(ws, targetId, token){
+    let payload = {"id":targetId}
+    let msg = MsgBuild(MessageTypes.GET_APPOINTMENT_TIMES, payload, token, "JSON")
+    ws.send(msg)
+}
+
 
 
 export function BookAppointment(ws, app, token){
     let payload = {"app":app}
     let msg = MsgBuild(MessageTypes.MAKE_APPOINTMENT, payload, token, "JSON")
+    console.log(`sending - ${msg}`)
     ws.send(msg)
 }
 

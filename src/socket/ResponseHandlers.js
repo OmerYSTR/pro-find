@@ -4,17 +4,6 @@ import StateManagedSelect from "react-select";
 import { appointmentsRecvd } from "../store/appointmentsSlice";
 
 
-function CheckBROADErrors(payload){
-    let data = payload.data
-    if (payload.type === MessageTypes.BROAD){
-        if (StatusMessage.TOKEN_BAD in data)
-            return [false, "Token invalid.\nRefresh page"]
-        //else ....
-    }
-    else{ return [true, ""]}
-}
-
-
 //#region Login
 export const handleLoginResponse = (payload, dispatch) =>{
     if (MessageTypes.LOGIN == payload.type)
@@ -91,40 +80,31 @@ export const handleChangePasswordResponse = (payload) =>{
 
 //#endregion
 
+
+
 //#region Homepage
 export const handleUserInfoResponse = (dispatch, payload) =>{
-    const [notExist, statusMessage] = CheckBROADErrors(payload)
-    if (!notExist){
-        return [notExist, statusMessage]
+    let data = payload.data
+
+    if (StatusMessage.FAILED_TO_GET_USER_INFO in data){
+        return [false, "Issue retrieving info"]
     }
-
     else{
-        let data = payload.data
-
-        if (StatusMessage.FAILED_TO_GET_USER_INFO in data){
-            return [false, "Issue retrieving info"]
+        const accInfo = data[StatusMessage.GOT_USER_INFO]
+        let toInsert = {"user":{}}
+        for (const key in accInfo){
+            if (key === "appointments" || key==="notifications") continue;
+            
+            toInsert["user"][key] = accInfo[key]
         }
-        else{
-            const accInfo = data[StatusMessage.GOT_USER_INFO]
-            let toInsert = {"user":{}}
-            for (const key in accInfo){
-                if (key === "appointments" || key==="notifications") continue;
-                
-                toInsert["user"][key] = accInfo[key]
-            }
-            toInsert["notifications"] = accInfo["notifications"]
-            dispatch(setUserInfo(toInsert)) 
-            dispatch(appointmentsRecvd(accInfo["appointments"]))   
-            return [true, data["user_id"]]
-        }
+        toInsert["notifications"] = accInfo["notifications"]
+        dispatch(setUserInfo(toInsert)) 
+        dispatch(appointmentsRecvd(accInfo["appointments"]))   
+        return [true, data["user_id"]]
     }
 }
 
 export const handleUpdatedAppointmentsResponse = (payload) =>{
-    const [notExist, statusMessage] = CheckBROADErrors(payload)
-    if (!notExist){
-        return [notExist, statusMessage]
-    }
     let data = payload.data
     if (StatusMessage.FAILED_TO_UPDATE_APP_STATUS in data)
         return [false, "Failed to update status"]
@@ -133,10 +113,6 @@ export const handleUpdatedAppointmentsResponse = (payload) =>{
 }
 
 export const handleMarkedReadNotifications = (payload) =>{
-    const [notExist, msg] = CheckBROADErrors(payload)
-    if (!notExist){
-        return [notExist, msg]
-    }  
     let data = payload.data
     if (StatusMessage.MARKED_READ_NOTIFICATIONS in data){
         return [true, ""]
@@ -145,6 +121,16 @@ export const handleMarkedReadNotifications = (payload) =>{
         return [false, data[StatusMessage.FAILED_TO_MARK_READ_NOTIFICATIONS]]
     }
 
+}
+
+
+export const handleAppointmentTimes = (payload) =>{
+    let data = payload.data
+    if (StatusMessage.GOT_APPOINTMENT_TIMES in data)
+        return [true, data[StatusMessage.GOT_APPOINTMENT_TIMES]]
+    else 
+        return [false, data[StatusMessage.FAILED_TO_GET_APPOINTMENT_TIMES]]
+        
 }
 
 
