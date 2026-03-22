@@ -97,12 +97,14 @@ export const handleUserInfoResponse = (dispatch, payload) =>{
             
             toInsert["user"][key] = accInfo[key]
         }
+        toInsert["user"]["id"] = data["user_id"]
         toInsert["notifications"] = accInfo["notifications"]
         dispatch(setUserInfo(toInsert)) 
         dispatch(appointmentsRecvd(accInfo["appointments"]))   
         return [true, data["user_id"]]
     }
 }
+
 
 export const handleUpdatedAppointmentsResponse = (payload) =>{
     let data = payload.data
@@ -111,6 +113,7 @@ export const handleUpdatedAppointmentsResponse = (payload) =>{
     else if (StatusMessage.UPDATED_APP_STATUS in data)
         return [true, ""]
 }
+
 
 export const handleMarkedReadNotifications = (payload) =>{
     let data = payload.data
@@ -131,6 +134,16 @@ export const handleAppointmentTimes = (payload) =>{
     else 
         return [false, data[StatusMessage.FAILED_TO_GET_APPOINTMENT_TIMES]]
         
+}
+
+
+export const handleAppointmentMadeResponse = (payload) =>{
+    let data = payload.data
+
+    if (StatusMessage.BOOKED_APPOINTMENT in data)
+        return [true, ""]
+    else
+        return [false, data[StatusMessage.FAILED_TO_BOOK_APPOINTMENT]]
 }
 
 

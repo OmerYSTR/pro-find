@@ -644,6 +644,7 @@ class UserInfoDispatcher(MessageHandler):
         return notifications
 
 
+
 class MarkNotificationsReadDispatcher(MessageHandler):
     def handle(self, msg: Message) -> tuple:
         try:
@@ -662,59 +663,89 @@ class MarkNotificationsReadDispatcher(MessageHandler):
             return MessageTypes.MARK_READ_NOTIFICATION, {StatusMessage.FAILED_TO_MARK_READ_NOTIFICATIONS.value:"Failed to mark messages"}
 
 
+
 class ChangeAppointmentStatusDispatcher(MessageHandler):
-    def handle(self, msg:Message) ->tuple:
+    def handle(self, msg: Message) -> tuple:
         try:
             with sqlite3.connect(DATABASE) as conn:
                 cur = conn.cursor()
-            
-                apps:dict = msg.data["appointments"]
+                apps: dict = msg.data["appointments"]
+                
+                processed_results = {"successful": [], "failed": {}}
                 
                 first_key = int(next(iter(apps)))
-                cur.execute("""SELECT u.full_name, a.professional_id
-                                FROM appointments a
-                                JOIN professional p ON a.professional_id = p.user_id
-                                JOIN users u ON p.user_id = u.id
-                                WHERE a.id = ?;""", (first_key,))
-                
-                row = cur.fetchone()
-                if not row:
-                    return MessageTypes.UPDATE_APPOINTMENTS_STATUS, {StatusMessage.FAILED_TO_UPDATE_APP_STATUS.value:"Something went wrong"}
-                prof_name, p_id= row
-                
-                
-                actual_status = {}
-                status_map = {'accepted':"Confirmed", 'cancelled':"Cancelled"}
-                for app_id, status in apps.items():
-                    actual_status[app_id] = status_map.get(status)
-                    status = actual_status[app_id]
+                cur.execute("SELECT u.full_name, a.professional_id FROM appointments a JOIN users u ON a.professional_id = u.id WHERE a.id = ?", (first_key,))
+                res = cur.fetchone()
+                prof_name, p_id = res if res else ("Freelancer", None)
 
-                    cur.execute("SELECT customer_id FROM appointments WHERE id=?", (app_id,))
-                    row = cur.fetchone()
-                    if not row:
-                        return MessageTypes.UPDATE_APPOINTMENTS_STATUS, {StatusMessage.FAILED_TO_UPDATE_APP_STATUS.value:"Something went wrong"}
-                    u_id = row[0]
-                    
-                    if status == "Confirmed":
-                        cur.execute("UPDATE appointments SET status=? WHERE id=?", (status, app_id))
-                        msg = f"{prof_name} has accepted your appointment"
+                status_map = {'accepted': "Confirmed", 'cancelled': "Cancelled"}
+
+                for app_id, status_input in apps.items():
+                    try:
+                        target_status = status_map.get(status_input)
+                        
+                        if target_status == "Confirmed":
+                            if self._is_time_slot_taken(cur, app_id):
+                                cur.execute("DELETE FROM appointments WHERE id=?", (app_id,))
+                                processed_results["failed"][app_id] = "Slot already taken"
+                                continue
+
+                        cur.execute("SELECT customer_id FROM appointments WHERE id=?", (app_id,))
+                        row = cur.fetchone()
+                        if not row:
+                            processed_results["failed"][app_id] = "Appointment not found"
+                            continue
+                        
+                        u_id = row[0]
+
+                        if target_status == "Confirmed":
+                            cur.execute("UPDATE appointments SET status=? WHERE id=?", (target_status, app_id))
+                            msg_text = f"{prof_name} has accepted your appointment"
+                        else:
+                            cur.execute("DELETE FROM appointments WHERE id=?", (app_id,))
+                            msg_text = f"{prof_name} has declined your appointment"
+
                         cur.execute("""INSERT INTO notifications (user_id, message, is_read, created_at, from_id)
-                                    VALUES (?,?, 0, ?, ?)""", (u_id, msg, datetime.now().strftime("%Y-%m-%d %H:%M:%S"),p_id))
-                    else:
-                        msg = f"{prof_name} has declined your appointment"
-                        cur.execute("""INSERT INTO notifications (user_id, message, is_read, created_at, from_id)
-                                    VALUES (?,?, 0, ?, ?)""", (u_id, msg, datetime.now().strftime("%Y-%m-%d %H:%M:%S"),p_id))
-                        cur.execute("""DELETE FROM appointments WHERE id=?""", (app_id,))                
-                
+                                    VALUES (?, ?, 0, ?, ?)""", 
+                                    (u_id, msg_text, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), p_id))
+                        
+                        processed_results["successful"].append(app_id)
+
+                    except Exception as inner_e:
+                        processed_results["failed"][app_id] = str(inner_e)
+                        continue
+
                 conn.commit()
-                return MessageTypes.UPDATE_APPOINTMENTS_STATUS, {StatusMessage.UPDATED_APP_STATUS.value:""}
                 
+                return MessageTypes.UPDATE_APPOINTMENTS_STATUS, {
+                    StatusMessage.UPDATED_APP_STATUS.value: "Batch processed",
+                    "results": processed_results
+                }
+
         except Exception as e:
-            conn.rollback()
-            print(f"Appointment Status change dispatcher - {e}")
-            return MessageTypes.UPDATE_APPOINTMENTS_STATUS, {StatusMessage.FAILED_TO_UPDATE_APP_STATUS.value:"Something went wrong"}
+            print(f"Critical Dispatcher Error: {e}")
+            return MessageTypes.UPDATE_APPOINTMENTS_STATUS, {StatusMessage.FAILED_TO_UPDATE_APP_STATUS.value: "System error"}
         
-#"2026-03-20": ["14:00", "15:30", "16:00", "17:00"]
+    def _is_time_slot_taken(self, cur, app_id):
+        cur.execute("SELECT professional_id, date, start_time, end_time FROM appointments WHERE id=?", (app_id,))
+        target = cur.fetchone()
+        if not target:
+            return False
+        
+        p_id, a_date, a_start, a_end = target
+
+        query = """
+            SELECT id FROM appointments 
+            WHERE professional_id = ? 
+            AND date = ? 
+            AND status = 'Confirmed'
+            AND id != ?
+            AND (? < end_time AND start_time < ?)
+        """
+        cur.execute(query, (p_id, a_date, app_id, a_start, a_end))
+        return cur.fetchone() is not None
+
+
 
 class AppointmentStartTimesDispatcher(MessageHandler):
     def handle(self, msg:Message) ->tuple:
@@ -749,12 +780,12 @@ class AppointmentStartTimesDispatcher(MessageHandler):
                 duration_minutes = (h*60) + m
                     
                 app_times = {}
-                current_date = datetime.now()            
+                current_date = datetime.now() + timedelta(days=1)           
                 
                 for _ in range(0, 35):
                     date_str = current_date.strftime("%Y-%m-%d")
                     booked_slots = existing_appointments.get(date_str, [])
-                    app_times[date_str] = self._calculate_free_day_working_hours(start_time, end_time, duration_minutes, booked_slots)
+                    app_times[date_str] = _calculate_free_day_working_hours(start_time, end_time, duration_minutes, booked_slots)
                     current_date = current_date+timedelta(days=1)
                     
                     
@@ -764,42 +795,64 @@ class AppointmentStartTimesDispatcher(MessageHandler):
             return MessageTypes.GET_APPOINTMENT_TIMES, {StatusMessage.FAILED_TO_GET_APPOINTMENT_TIMES.value:"Issue fetching the appointment dates and times"}
 
     
-    def _calculate_free_day_working_hours(self, start_time, end_time, job_duration, existing_appointments=[]) ->list:
-        format = "%H:%M"
-        current_slot = datetime.strptime(start_time, format)
-        end_of_day = datetime.strptime(end_time, format)
-        
-        available_times = []
-        while current_slot+timedelta(minutes=job_duration) <= end_of_day:
-            slot_str = current_slot.strftime(format)
-            
-            if slot_str not in existing_appointments:
-                available_times.append(slot_str)
-                
-            current_slot+= timedelta(minutes=job_duration)
-        
-        return available_times
-        
 
-#Message example - {'app': 
-# {'date': '2026-03-21', 
-# 'start_time': '08:00', 
-# 'end_time': '10:30', 
-# 'address': '1', 
-# 'details': ''}}  
+def _calculate_free_day_working_hours(start_time, end_time, job_duration, existing_appointments=[]) ->list:
+    format = "%H:%M"
+    current_slot = datetime.strptime(start_time, format)
+    end_of_day = datetime.strptime(end_time, format)
+    
+    available_times = []
+    while current_slot+timedelta(minutes=job_duration) <= end_of_day:
+        slot_str = current_slot.strftime(format)
+        
+        if slot_str not in existing_appointments:
+            available_times.append(slot_str)
+            
+        current_slot+= timedelta(minutes=job_duration)
+    
+    return available_times
+        
+        
+        
 class BookAppointmentDispatcher(MessageHandler):
     def handle(self, msg:Message) ->tuple:
         try:
             with sqlite3.connect(DATABASE) as conn:
                 cur = conn.cursor()
-                data = msg.data
-                   
+                data = msg.data["app"]
                 
+                cur.execute("SELECT start_time FROM appointments WHERE date=? AND professional_id=? AND status='Confirmed'", 
+                            (data["date"], data["prof_id"]))
+                start_times_booked = [row[0] for row in cur.fetchall()]
+                
+                fmt = "%H:%M"
+                start_dt = datetime.strptime(data["start_time"], fmt)
+                end_dt = datetime.strptime(data["end_time"], fmt)
+                
+                delta = end_dt - start_dt 
+                minutes = int(delta.total_seconds() // 60)
+
+                available_slots = _calculate_free_day_working_hours(
+                    data["start_time"], 
+                    data["end_time"],
+                    minutes, 
+                    start_times_booked
+                )
+
+                if data["start_time"] not in available_slots:
+                    return MessageTypes.MAKE_APPOINTMENT, {StatusMessage.BOOKED_APPOINTMENT.value: "Time slot is unavailable or invalid."}
+
+                cur.execute("""
+                    INSERT INTO appointments (professional_id, customer_id, date, start_time, end_time, address, details, status)
+                    VALUES (?,?,?,?,?,?,?,'Requested')
+                """, (data["prof_id"], data["user_id"], data["date"], data["start_time"], data["end_time"], data["address"], data["details"])) 
+                
+                conn.commit()
+                return MessageTypes.MAKE_APPOINTMENT, {StatusMessage.BOOKED_APPOINTMENT.value: "Appointment booked successfully"}
                 
         except Exception as e:
-            print("Appointment booking dispatcher exception - ",e)
-            return MessageTypes.MAKE_APPOINTMENT, {StatusMessage.FAILED_TO_BOOK_APPOINTMENT.value:"Failed to make the appointment, try again later"}    
-            
+            print(f"Appointment booking dispatcher exception - {e}")
+            return MessageTypes.MAKE_APPOINTMENT, {StatusMessage.FAILED_TO_BOOK_APPOINTMENT.value: "Failed to book, please try again."}
 #endregion
 
 
@@ -1090,7 +1143,7 @@ with sqlite3.connect(DATABASE) as conn:
 
     # cur.execute("SELECT * FROM professional WHERE user_id = '11'")
     # print(cur.fetchall())
-    # cur.execute("SELECT * FROM appointments")
+    # cur.execute("SELECT * FROM appointments WHERE status='Confirmed'")
     # print(cur.fetchall())
     # cur.execute("""INSERT INTO notifications (user_id, message, is_read, created_at, from_id)
     # VALUES (13, 'You viewed the project files yesterday.', 1, '2026-03-14 15:30:00', 11)""")

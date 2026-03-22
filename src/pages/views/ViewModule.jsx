@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CalendarIcon, CheckCircle, Info, Check, X, Briefcase, MapPin, AlignLeft, Calendar, Star, Clock, FileText, User, DollarSign} from "lucide-react"
 import { UpdateAppointmentsStatusRequest } from "../../socket/RequestHandler";
+import { ErrorMessage } from "../signUpModule";
 
 
 
@@ -127,6 +128,10 @@ export function PendingAppointments({ appointments = [], ws, token }) {
   const totalDecisions = Object.keys(decisions).length;
   const gridLayout = "grid grid-cols-[1fr_1.2fr_0.5fr_0.5fr_1fr_2fr_0.4fr_1fr]";
 
+  const [allowed, setAllowed] = useState(true)
+
+  const actualDecisionsCount = Object.values(decisions).filter(status => status !== null).length;
+
   const handleDecision = (appId, status) => {
     setDecisions((prev) => ({ ...prev, [appId]: status }));
   };
@@ -136,8 +141,28 @@ export function PendingAppointments({ appointments = [], ws, token }) {
     setDecisions({})
   };
 
+  useEffect(() => {
+    
+    const seen = new Set();
+    let conflictFound = false;
+
+    const acceptedIds = Object.keys(decisions).filter(
+        (id) => decisions[id] === "accepted"
+    );
+
+    for (const appId of acceptedIds){
+        const appData = appointments.find((a) => String(a.id) === String(appId))
+        if (appData){
+            const slotKey = `${appData.date}-${appData.start_time}`
+            if (seen.has(slotKey)){conflictFound=true; break}
+            seen.add(slotKey)
+        }}
+    setAllowed(!conflictFound)
+
+}, [decisions, appointments])
 
   return (
+
     <>
       <div className="w-full bg-slate-900 text-white rounded-xl shadow-2xl overflow-hidden mt-8 border border-slate-800">
         
@@ -200,12 +225,13 @@ export function PendingAppointments({ appointments = [], ws, token }) {
               <span>Select appointments to accept or decline.</span>
             )}
           </div>
+          {!allowed && (<ErrorMessage message={"Selected two appointments with the same date and starting time"}  />)}
           
           <button
             onClick={handleFinalSubmit}
-            disabled={totalDecisions === 0}
+            disabled={actualDecisionsCount === 0 || !allowed}
             className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-bold transition-all transform active:scale-95 ${
-              totalDecisions > 0 
+              actualDecisionsCount > 0 && allowed
                 ? 'bg-blue-600 hover:bg-blue-500 shadow-[0_0_15px_rgba(37,99,235,0.4)] text-white' 
                 : 'bg-slate-700 text-slate-500 cursor-not-allowed'
             }`}
@@ -568,13 +594,18 @@ export function AppointmentBooking({ availability, jobDuration, onConfirm, onCan
                   >
                       Cancel
                   </button>
-                  
-                  <button 
-                      onClick={handleConfirm}
-                      className="flex-[2] py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold rounded-2xl shadow-lg flex items-center justify-center gap-2 transition-all transform hover:-translate-y-1"
-                  >
-                      <CheckCircle className="w-5 h-5" /> Confirm Booking
-                  </button>
+                                
+                <button 
+                    disabled={!selectedDate || !selectedTime || !formData.address}
+                    onClick={handleConfirm}
+                    className={`flex-[2] py-4 font-bold rounded-2xl shadow-lg flex items-center justify-center gap-2 transition-all 
+                        ${(!selectedDate || !selectedTime || !formData.address) 
+                            ? "bg-slate-700 text-slate-500 cursor-not-allowed opacity-50" 
+                            : "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white transform hover:-translate-y-1"
+                        }`}
+                >
+                    <CheckCircle className="w-5 h-5" /> Confirm Booking
+                </button>
               </div>
           </div>
       </div>

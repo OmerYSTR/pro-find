@@ -27,7 +27,7 @@ export default function HomePage({isPublic=false}) {
         "cities":"Kfar Saba, Ra'anana",
         "description":"Hey, I am Omer and I am an intermediate Cyber Security analyst\nI take a small fee and do a whole lotta work",
         "years": 4,
-        "job_duration":"2h 30m",
+        "job_duration":"2h",
         "rating":4.7,
         "price":100,
     });

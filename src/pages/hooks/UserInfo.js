@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { UserInfoRequest, MarkReadNotificationsRequest } from "../../socket/RequestHandler";
 import webSocketParser from "../../socket/MsgParser";
-import { handleUserInfoResponse, handleProfileInfoResponse, handleUpdatedAppointmentsResponse, handleMarkedReadNotifications, handleAppointmentTimes } from "../../socket/ResponseHandlers";
+import { handleUserInfoResponse, handleProfileInfoResponse, handleUpdatedAppointmentsResponse, handleMarkedReadNotifications, handleAppointmentTimes, handleAppointmentMadeResponse } from "../../socket/ResponseHandlers";
 import { logout } from "../../store/authSlice";
 import { MessageTypes, StatusMessage } from "../../socket/MsgTypes";
 
@@ -34,7 +34,8 @@ export default function useUserSync(ws, token, dispatch, navigate, setViewedFree
                 else{
                     const userId = info.data.user_id;
                     MarkReadNotificationsRequest(ws, userId, token)
-                }}
+                }
+            }
            
             else if (MessageTypes.GET_PUBLIC_PROFILE_INFO === info.type){
                 const [status, data] = handleProfileInfoResponse(info) 
@@ -49,7 +50,8 @@ export default function useUserSync(ws, token, dispatch, navigate, setViewedFree
                     UserInfoRequest(ws, token)
                 }
                 else{
-                    console.log("Error occured")
+                    console.log("Error occured ", data)
+                    UserInfoRequest(ws, token)
                 }
             }
             
@@ -68,6 +70,12 @@ export default function useUserSync(ws, token, dispatch, navigate, setViewedFree
                 }
                 else
                     setAppointmentTimes(null)
+            }
+
+            else if (MessageTypes.MAKE_APPOINTMENT === info.type){
+                const [status, msg] = handleAppointmentMadeResponse(info)
+                if (!status){alert(msg)}
+                else{alert("The appointment information has been sent to the freelancer!"); setAppointmentTimes(null)}
             }
 
             else if (MessageTypes.BROAD === info.type){

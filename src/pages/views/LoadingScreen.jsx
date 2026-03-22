@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-
+import Navbar from "../routerPrint";
 export default function LoadingScreen() {
     const [dots, setDots] = useState(".");
 
@@ -11,8 +11,10 @@ export default function LoadingScreen() {
     }, []);
 
     return (
+        <>
         <div className="fixed inset-0 bg-slate-900 flex items-center justify-center">
             <h1 className="text-white text-5xl font-bold">Loading{dots}</h1>
         </div>
+        </>
     );
 }

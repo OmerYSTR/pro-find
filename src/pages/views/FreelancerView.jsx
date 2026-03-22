@@ -6,23 +6,10 @@ import { useSocket } from "../../socket/SocketContext"
 import { Calendar } from "lucide-react"
 import { BookAppointment, GetAvailableWorkTimes } from "../../socket/RequestHandler"
 import LoadingScreen from "./LoadingScreen"
-
+import { ErrorMessage } from "../signUpModule"
 
 function FreelancerPublic({ user, ws, token, appointmentTimes }){
-    const mockAvailability = {
-    "2026-03-20": ["14:00", "15:30", "16:00", "17:00"],
-    
-    "2026-03-21": [
-        "08:00", "09:00", "10:00", "11:00", 
-        "13:00", "14:00", "15:00", "16:00"
-    ],
-    
-    "2026-03-23": ["12:00", "13:00"],
-    
-    "2026-03-24": ["18:00", "19:00", "20:00"],
-    
-    "2026-03-25": ["09:30", "10:30", "14:30", "15:30"]
-    };
+    const userId = useSelector((state) => state.auth.userInfo?.id)
     const profId = user.id
     const username = user.username
     const job = user.job 
@@ -32,13 +19,14 @@ function FreelancerPublic({ user, ws, token, appointmentTimes }){
     const jobDuration = user.job_duration
     const rating = user.rating
     const price = user.price
+    
 
     const [makeAppointment, setMakeAppointment] = useState(false)
 
-    const [app, setApp] = useState(null)
+    const [app, setApp] = useState({prof_id:profId, user_id:userId})
    
     useEffect(() => {
-        if (!app) {return;}
+        if (Object.keys(app).length===  2) {return;}
         else{BookAppointment(ws, app, token);}
     }, [app])
 
@@ -71,7 +59,7 @@ function FreelancerPublic({ user, ws, token, appointmentTimes }){
                     <AppointmentBooking 
                     availability={appointmentTimes} 
                     jobDuration={jobDuration} 
-                    onConfirm={(app) => setApp(app)} 
+                    onConfirm={(newApp) => {setApp(prevApp => ({...prevApp, ...newApp})); setMakeAppointment(false)}} 
                     onCancel={() => setMakeAppointment(false)}
                     price={price}/>
 
