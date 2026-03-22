@@ -10,7 +10,7 @@ const appointmentSlice = createSlice({
     name: "appointments",
     initialState, 
     reducers:{
-        appointmentRecvd(state, action){
+        appointmentsRecvd(state, action){
             state.userAppointments = action.payload
             state.freelancerAppointments = action.payload
         },
@@ -30,7 +30,7 @@ const appointmentSlice = createSlice({
 })
 
 export const {
-    appointmentRecvd, 
+    appointmentsRecvd, 
     appointmentAddedForUser, 
     appointmentAddedForFreelancer,
     appointmentRemovedForUser,

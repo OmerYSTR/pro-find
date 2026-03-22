@@ -109,7 +109,7 @@ function ChangePassword({changePasswordRequest, password, setPassword }) {
 }
 
 
-    export default function LogIn(payload){
+export default function LogIn(payload){
     const ws = useSocket();
     const navigate = useNavigate()
     const dispatch = useDispatch()
@@ -142,17 +142,14 @@ function ChangePassword({changePasswordRequest, password, setPassword }) {
     
     useEffect(() =>{
         if (!ws) return;
-        ws.onmessage = (event) => {
+        const handleMessage = (event) => {
             setServerError("")
             console.log(`Recvd - ${event.data}`)
             const info = webSocketParser(event.data)
             console.log(`type - ${info.type}\ndata - ${info.data}`)
             if (info.type == MessageTypes.LOGIN){
                 const [loggedIn, message] = handleLoginResponse(info, dispatch);
-                if (loggedIn){
-                    navigate("/")
-                }
-                else{
+                if (!loggedIn){
                     setServerError(message)
                 }}
             
@@ -176,7 +173,11 @@ function ChangePassword({changePasswordRequest, password, setPassword }) {
                 else setServerError(message)
             }
         }
+        ws.addEventListener("message", handleMessage);
 
+        return () =>{
+            ws.removeEventListener("message", handleMessage)
+        }
     }, [ws, dispatch, navigate])
 
 

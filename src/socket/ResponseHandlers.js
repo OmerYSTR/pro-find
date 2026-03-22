@@ -1,6 +1,7 @@
 import {MessageTypes, StatusMessage} from "./MsgTypes"
-import {login} from "../store/authSlice"
+import {login, setUserInfo} from "../store/authSlice"
 import StateManagedSelect from "react-select";
+import { appointmentsRecvd } from "../store/appointmentsSlice";
 
 
 //#region Login
@@ -8,7 +9,7 @@ export const handleLoginResponse = (payload, dispatch) =>{
     if (MessageTypes.LOGIN == payload.type)
         if (StatusMessage.LOGGED_IN in payload.data)
         {
-            dispatch(login())
+            dispatch(login(payload.data[StatusMessage.LOGGED_IN]))
             return [true, payload.data[StatusMessage.LOGGED_IN]];
         }
         else if (StatusMessage.FAILED_LOG_IN in payload.data)
@@ -75,6 +76,79 @@ export const handleChangePasswordResponse = (payload) =>{
         return [false, data[StatusMessage.CHANGE_PASSWORD_BAD]]
     else
         return [true,data[StatusMessage.CHANGE_PASSWORD_GOOD]]
+}
+
+//#endregion
+
+
+
+//#region Homepage
+export const handleUserInfoResponse = (dispatch, payload) =>{
+    let data = payload.data
+
+    if (StatusMessage.FAILED_TO_GET_USER_INFO in data){
+        return [false, "Issue retrieving info"]
+    }
+    else{
+        const accInfo = data[StatusMessage.GOT_USER_INFO]
+        let toInsert = {"user":{}}
+        for (const key in accInfo){
+            if (key === "appointments" || key==="notifications") continue;
+            
+            toInsert["user"][key] = accInfo[key]
+        }
+        toInsert["user"]["id"] = data["user_id"]
+        toInsert["notifications"] = accInfo["notifications"]
+        dispatch(setUserInfo(toInsert)) 
+        dispatch(appointmentsRecvd(accInfo["appointments"]))   
+        return [true, data["user_id"]]
+    }
+}
+
+
+export const handleUpdatedAppointmentsResponse = (payload) =>{
+    let data = payload.data
+    if (StatusMessage.FAILED_TO_UPDATE_APP_STATUS in data)
+        return [false, "Failed to update status"]
+    else if (StatusMessage.UPDATED_APP_STATUS in data)
+        return [true, ""]
+}
+
+
+export const handleMarkedReadNotifications = (payload) =>{
+    let data = payload.data
+    if (StatusMessage.MARKED_READ_NOTIFICATIONS in data){
+        return [true, ""]
+    }  
+    else{
+        return [false, data[StatusMessage.FAILED_TO_MARK_READ_NOTIFICATIONS]]
+    }
+
+}
+
+
+export const handleAppointmentTimes = (payload) =>{
+    let data = payload.data
+    if (StatusMessage.GOT_APPOINTMENT_TIMES in data)
+        return [true, data[StatusMessage.GOT_APPOINTMENT_TIMES]]
+    else 
+        return [false, data[StatusMessage.FAILED_TO_GET_APPOINTMENT_TIMES]]
+        
+}
+
+
+export const handleAppointmentMadeResponse = (payload) =>{
+    let data = payload.data
+
+    if (StatusMessage.BOOKED_APPOINTMENT in data)
+        return [true, ""]
+    else
+        return [false, data[StatusMessage.FAILED_TO_BOOK_APPOINTMENT]]
+}
+
+
+export const handleProfileInfoResponse = (payload) => {
+    return;
 }
 
 //#endregion

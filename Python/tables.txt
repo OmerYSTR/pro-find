@@ -5,7 +5,7 @@
 | full_name         |
 | email (UNIQUE)    |
 | password_hash     |
-| user_type         | 'customer' or 'professional'
+| user_type         | 'User' or 'Freelancer'
 | created_at        |
 | profile_image     |
 | salt              |
@@ -29,6 +29,7 @@ customer
 | rating                     |
 | start_time                 |
 | end_time                   |
+| hour_price                 |
 +----------------------------+
 
 +--------------------------------------+
@@ -46,7 +47,7 @@ customer
 |               appointments                |
 +-------------------------------------------+
 | PK id                                     |
-| FK professional_id → PROFESSIONALS.id     |
+| FK professional_id → USERS.id             |
 | FK customer_id → USERS.id                 |
 | date                                      |
 | start_time                                |
@@ -98,6 +99,7 @@ customer
 | message                              |
 | is_read (0/1)                        |
 | created_at                           |
+| from_id                              |
 +--------------------------------------+
 
 
@@ -118,6 +120,7 @@ customer
 | description (NULL if User)                |
 | start_working(NULL if User)               |
 | finish_working (NULL if User)             |
+| hour_price                                |
 |                                           |
 | verification_code                         |
 | expires_at                                |

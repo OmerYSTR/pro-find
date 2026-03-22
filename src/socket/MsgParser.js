@@ -10,7 +10,7 @@ export default function webSocketParser(payload)
 {
     try{
         const msgObj = JSON.parse(payload);
-        const {type, data, data_type} = msgObj; 
+        const {type, data, data_type, token} = msgObj; 
         let parsedData = data
         if (data_type == "BYTES"){
             const binaryStr = atob(data);
@@ -21,7 +21,7 @@ export default function webSocketParser(payload)
             parsedData = bytes;
         }
 
-        return {type, data:parsedData};
+        return {type, data:parsedData, token};
     } catch(err){
         console.error("Failed to parse message", err);
         return null;

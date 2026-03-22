@@ -2,6 +2,7 @@ import MsgBuild from "./MsgBuilder"
 import {useSocket} from '../socket/SocketContext'
 import { MessageTypes } from "./MsgTypes"
 import {useSelector} from 'react-redux'
+import { MousePointerBan } from "lucide-react"
 
 //#region Login
 export function LoginRequest(username, password, ws, token=""){
@@ -62,3 +63,55 @@ export function ChangePasswordRequest(ws, email, pass, token=""){
     ws.send(msg)
 }
 //#endregion
+
+
+//#region HomePage
+export function UserInfoRequest(ws, token){
+    const [encodedData] = token.split('.')
+    const decodedJson = atob(encodedData)
+    const data = JSON.parse(decodedJson)
+    let payload = {"email":data.email}
+    let msg = MsgBuild(MessageTypes.GET_USER_INFO, payload, token, "JSON")
+    ws.send(msg) 
+}
+
+
+export function UpdateAppointmentsStatusRequest(ws, apps, token){
+    let payload = {"appointments":apps}
+    let msg = MsgBuild(MessageTypes.UPDATE_APPOINTMENTS_STATUS, payload, token, "JSON")
+    console.log(`About to send - ${msg}`)
+    ws.send(msg)
+}
+
+
+export function MarkReadNotificationsRequest(ws, userId, token){
+    let payload = {"user_id":userId}
+    let msg = MsgBuild(MessageTypes.MARK_READ_NOTIFICATION, payload, token, "JSON")
+    ws.send(msg)
+}
+
+
+
+export function GetPublicProfileInfoRequest(ws, targetId, token){
+    return;
+}
+
+
+export function GetAvailableWorkTimes(ws, targetId, token){
+    let payload = {"id":targetId}
+    let msg = MsgBuild(MessageTypes.GET_APPOINTMENT_TIMES, payload, token, "JSON")
+    ws.send(msg)
+}
+
+
+
+export function BookAppointment(ws, app, token){
+    let payload = {"app":app}
+    let msg = MsgBuild(MessageTypes.MAKE_APPOINTMENT, payload, token, "JSON")
+    console.log(`sending - ${msg}`)
+    ws.send(msg)
+}
+
+//#endregion
+
+

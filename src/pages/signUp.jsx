@@ -315,6 +315,18 @@ Self description - ${freelancerInfo.description }
 
             <InputField name={"description"} value={freelancerInfo.description} onChange={handleChange} placeholder={"Description"}/>
 
+            <SingleChoiceDropDownMenu 
+            name={"hourPrice"} 
+            options={Array.from({length:1001}, (_,i) => i)}
+            value={freelancerInfo.hourPrice} 
+            onChange={(pricePicked) => setFreeLancerInfo(prev => ({
+                          ...prev, 
+                          hourPrice: pricePicked 
+                        }))}
+            placeholder={"Price per hour $$$$"}
+            customWidth={widthForBigDropDowns}/>
+            
+              
               {passwordMismatch && (
                 <ErrorMessage message={"Passwords do not match"}/>
               )}
@@ -359,7 +371,8 @@ export default function SignUpPage() {
       startWorking: "",
       finishWorking:"",
       jobDuration:0,
-      description: ""
+      description: "",
+      hourPrice:""
   });
 
   const [serverError, setServerError] = useState("");
@@ -370,8 +383,9 @@ export default function SignUpPage() {
 
   const handleSignUpPageSubmit = () => {
     setServerError("")
+    console.log(role)
     if (role === "User")
-      SignUpRequest(ws, userInfo,"", role);
+      SignUpRequest(ws, userInfo, role);
     else if (role === "Freelancer")
       SignUpRequest(ws, freelancerInfo, role);
   }
@@ -388,7 +402,7 @@ export default function SignUpPage() {
 
   useEffect(() =>{
     if (!ws) return;
-    ws.onmessage = (event) =>{
+    const handleMessage = (event) =>{
       console.log(`Recvd - ${event.data}`)
       const info = webSocketParser(event.data)
 
@@ -413,6 +427,12 @@ export default function SignUpPage() {
           setServerError(errorMessage)
         }
       }
+    }
+
+    ws.addEventListener("message", handleMessage);
+
+    return () =>{
+      ws.removeEventListener("message", handleMessage);
     }
   },[ws])
 

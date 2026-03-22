@@ -3,31 +3,32 @@ import {createSlice} from '@reduxjs/toolkit'
 const initialState = {
     userToken: "",
     userInfo: {},
-    appointments:[],
-    loggedIn: false
+    loggedIn: false,
+    notifications: []
 }
 
 const authSlice = createSlice({
     name: "auth",
     initialState,
     reducers:{
-        login(state){
+        login(state, info){
             state.loggedIn = true;
+            state.userToken = info.payload;
         },
-        userInfo(state, info){
-            state.userToken = info.token
-            state.userInfo = info.user
-            state.appointments = info.appointments
-            state.notifications = info.notifications
+        setUserInfo(state, info){
+            state.userInfo = info.payload.user
+            state.notifications = info.payload.notifications
         },
         logout(state){
-            state.currentUser = {};
+            state.userInfo = {};
+            state.userToken = "";
             state.loggedIn=false;
+            state.notifications=[];
         }
     }
 
 })
 
 
-export const {login, userInfo, logout} = authSlice.actions
+export const {login, setUserInfo, logout} = authSlice.actions
 export default authSlice.reducer
