@@ -20,17 +20,7 @@ export default function HomePage({isPublic=false}) {
 
     const [appointmentTimes, setAppointmentTimes] = useState(null)
 
-    const [viewedFreelancer, setViewedFreelancer] = useState({
-        "id":11,
-        "username":"Omer Yaffet Stern",
-        "job":"Cyber Security Analyst",
-        "cities":"Kfar Saba, Ra'anana",
-        "description":"Hey, I am Omer and I am an intermediate Cyber Security analyst\nI take a small fee and do a whole lotta work",
-        "years": 4,
-        "job_duration":"2h",
-        "rating":4.7,
-        "price":100,
-    });
+    const [viewedFreelancer, setViewedFreelancer] = useState(null)
 
     useUserSync(ws, token, dispatch, navigate, setViewedFreelancer, setAppointmentTimes, isPublic);
 

@@ -23,6 +23,7 @@ export const handleLoginResponse = (payload, dispatch) =>{
 //#endregion
 
 
+
 //#region SignUp
 export const handleSignUpResponse = (payload) =>{
     let signupFailed = StatusMessage.FAILED_SIGN_UP;
@@ -40,6 +41,7 @@ export const handleSignUpResponse = (payload) =>{
 //#endregion
 
 
+
 //#region Verification
 export const handleVerificationReponse = (payload) =>{
     let data = payload.data
@@ -51,6 +53,7 @@ export const handleVerificationReponse = (payload) =>{
     return [false, "Server error"]
 }
 //#endregion
+
 
 
 //#region Forgot password
@@ -147,8 +150,33 @@ export const handleAppointmentMadeResponse = (payload) =>{
 }
 
 
+//#endregion
+
+
+//#region Search
 export const handleProfileInfoResponse = (payload) => {
     return;
+}
+
+
+export const handleJobsResponse = (payload) =>{
+    let data = payload.data
+    console.log(data)
+    if (StatusMessage.GOT_JOBS in data){
+        return [true, data[StatusMessage.GOT_JOBS]["jobs"]]
+    }
+    else{
+        return [false, data[StatusMessage.FAILED_TO_GET_JOBS]]
+    }
+}
+
+
+export const handleCitiesResponse = (payload) =>{
+    let data = payload.data
+    if (StatusMessage.GOT_CITIES in data) 
+        return [true, data[StatusMessage.GOT_CITIES]["cities"]]
+    else
+        return [false, data[StatusMessage.FAILED_TO_GET_CITIES]]
 }
 
 //#endregion
