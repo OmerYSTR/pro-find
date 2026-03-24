@@ -8,7 +8,7 @@ import time
 import sqlite3
 from collections import defaultdict
 
-MAX_MESSAGES = 10
+MAX_MESSAGES = 15
 TIME_WINDOW = 20 
 
 dispacher = MessageHandler.configure_dispatcher()
@@ -96,7 +96,8 @@ def handle_client(soc: socket.socket):
             message_times.append(time.time())
             
             msg = MessageHandler.Message(payload)
-        except:
+        except Exception as e:
+            print(f"Exception in recieving - {e}")
             break
 
         print(f"Got - {msg.type_of}, {msg.data}\n\n")

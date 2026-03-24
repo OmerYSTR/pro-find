@@ -91,18 +91,11 @@ export function MarkReadNotificationsRequest(ws, userId, token){
 }
 
 
-
-export function GetPublicProfileInfoRequest(ws, targetId, token){
-    return;
-}
-
-
 export function GetAvailableWorkTimes(ws, targetId, token){
     let payload = {"id":targetId}
     let msg = MsgBuild(MessageTypes.GET_APPOINTMENT_TIMES, payload, token, "JSON")
     ws.send(msg)
 }
-
 
 
 export function BookAppointment(ws, app, token){
@@ -115,3 +108,31 @@ export function BookAppointment(ws, app, token){
 //#endregion
 
 
+//#region Search
+export function GetPublicProfileInfoRequest(ws, targetId, token){
+    let payload = {id:targetId}
+    let msg = MsgBuild(MessageTypes.GET_PUBLIC_PROFILE_INFO, payload, token, "JSON")
+    ws.send(msg)
+}
+
+
+export function GetMinimalFreelancerInfo(ws, token, city, job){
+    let payload = {"city":city, "job":job}
+    let msg = MsgBuild(MessageTypes.GET_MINIMAL_FREELANCER_INFO, payload, token, "JSON")
+    ws.send(msg)
+}
+
+export function GetAllJobs(ws, token)
+{
+    let msg = MsgBuild(MessageTypes.GET_JOBS, "", token, "JSON")
+    ws.send(msg)
+}
+
+
+export function GetCitiesByJob(ws, job, token){
+    let payload = {"job":job}
+    let msg = MsgBuild(MessageTypes.GET_CITIES_BY_JOB, payload, token, "JSON")
+    ws.send(msg)
+}
+
+//#endregion

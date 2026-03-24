@@ -390,29 +390,25 @@ export function AppointmentBooking({ availability, jobDuration, onConfirm, onCan
     });
 
 
-  const parseDurationToHours = (durationStr) => {
-      if (!durationStr) return 0;
-      const hours = parseInt(durationStr.match(/(\d+)h/)?.[1] || 0);
-      const mins = parseInt(durationStr.match(/(\d+)m/)?.[1] || 0);
-      return hours + (mins / 60);
-  };
+    const parseDurationToHours = (durationStr) => {
+        if (!durationStr || !durationStr.includes(':')) return 0;
+        const [hours, mins] = durationStr.split(':').map(Number);
+        return hours + (mins / 60);
+    };
 
-  const calculateEndTime = (startTime, durationStr) => {
-      if (!startTime || !durationStr) return "";
-      
-      const [startH, startM] = startTime.split(':').map(Number);
-      const durationDecimal = parseDurationToHours(durationStr);
-      
-      const totalStartMinutes = (startH * 60) + startM;
-      const totalDurationMinutes = Math.round(durationDecimal * 60);
-      const totalEndMinutes = totalStartMinutes + totalDurationMinutes;
-      
-      const endH = Math.floor(totalEndMinutes / 60) % 24;
-      const endM = totalEndMinutes % 60;
-      
-      return `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`;
-  };
-
+    const calculateEndTime = (startTime, durationStr) => {
+        if (!startTime || !durationStr) return "";
+        
+        const [startH, startM] = startTime.split(':').map(Number);
+        const [durH, durM] = durationStr.split(':').map(Number);
+        
+        const totalMinutes = (startH * 60) + startM + (durH * 60) + durM;
+        
+        const endH = Math.floor(totalMinutes / 60) % 24;
+        const endM = totalMinutes % 60;
+        
+        return `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`;
+    };
 
     const availableDates = Object.keys(availability);
     const timeSlots = selectedDate ? availability[selectedDate] : [];

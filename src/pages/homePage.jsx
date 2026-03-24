@@ -1,5 +1,5 @@
 import { useSelector, useDispatch } from "react-redux";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { useSocket } from "../socket/SocketContext";
 
@@ -14,25 +14,20 @@ export default function HomePage({isPublic=false}) {
     const ws = useSocket();
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const location = useLocation();
     
     const authUser = useSelector((state) => state.auth.userInfo);
     const token = useSelector((state) => state.auth.userToken);
 
+    const { id } = useParams(); 
+
+    const targetId = id || location.state?.freelancerId ||null
+
     const [appointmentTimes, setAppointmentTimes] = useState(null)
 
-    const [viewedFreelancer, setViewedFreelancer] = useState({
-        "id":11,
-        "username":"Omer Yaffet Stern",
-        "job":"Cyber Security Analyst",
-        "cities":"Kfar Saba, Ra'anana",
-        "description":"Hey, I am Omer and I am an intermediate Cyber Security analyst\nI take a small fee and do a whole lotta work",
-        "years": 4,
-        "job_duration":"2h",
-        "rating":4.7,
-        "price":100,
-    });
+    const [viewedFreelancer, setViewedFreelancer] = useState(null)
 
-    useUserSync(ws, token, dispatch, navigate, setViewedFreelancer, setAppointmentTimes, isPublic);
+    useUserSync(ws, token, dispatch, navigate, setViewedFreelancer, setAppointmentTimes, targetId, isPublic || (targetId != null));
 
     const isLoaded = authUser && Object.keys(authUser).length > 0;
     

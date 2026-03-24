@@ -99,13 +99,17 @@ def configure_dispatcher() -> MessageDispatcher:
     d.register(MessageTypes.MARK_READ_NOTIFICATION.value, MarkNotificationsReadDispatcher)
     d.register(MessageTypes.GET_APPOINTMENT_TIMES.value, AppointmentStartTimesDispatcher)
     d.register(MessageTypes.MAKE_APPOINTMENT.value, BookAppointmentDispatcher)
+    d.register(MessageTypes.GET_JOBS.value, ExistingJobsDispatcher)
+    d.register(MessageTypes.GET_CITIES_BY_JOB.value, CitiesByJobDispatcher)
+    d.register(MessageTypes.GET_MINIMAL_FREELANCER_INFO.value, MinimalProfessionalInfo)
+    d.register(MessageTypes.GET_PUBLIC_PROFILE_INFO.value, FreelancerPublicInfo)
     
     return d
         
         
         
 
-#region authentication      
+#region authentication
 class LoginDispatcher(MessageHandler):
     def handle(self, msg:Message) -> tuple:
         try:
@@ -815,48 +819,193 @@ def _calculate_free_day_working_hours(start_time, end_time, job_duration, existi
         
         
 class BookAppointmentDispatcher(MessageHandler):
-    def handle(self, msg:Message) ->tuple:
+    def handle(self, msg: Message) -> tuple:
         try:
             with sqlite3.connect(DATABASE) as conn:
                 cur = conn.cursor()
                 data = msg.data["app"]
                 
-                cur.execute("SELECT start_time FROM appointments WHERE date=? AND professional_id=? AND status='Confirmed'", 
-                            (data["date"], data["prof_id"]))
-                start_times_booked = [row[0] for row in cur.fetchall()]
+                cur.execute("SELECT avg_job_duration FROM professional WHERE user_id = ?", (data["prof_id"],))
+                row = cur.fetchone()
+                if not row:
+                    return MessageTypes.MAKE_APPOINTMENT, {StatusMessage.FAILED_TO_BOOK_APPOINTMENT.value: "Freelancer not found"}
                 
-                fmt = "%H:%M"
-                start_dt = datetime.strptime(data["start_time"], fmt)
-                end_dt = datetime.strptime(data["end_time"], fmt)
-                
-                delta = end_dt - start_dt 
-                minutes = int(delta.total_seconds() // 60)
+                duration_str = row[0]
+                duration_minutes = self.get_duration_minutes(duration_str)
 
-                available_slots = _calculate_free_day_working_hours(
-                    data["start_time"], 
-                    data["end_time"],
-                    minutes, 
-                    start_times_booked
-                )
-
-                if data["start_time"] not in available_slots:
-                    return MessageTypes.MAKE_APPOINTMENT, {StatusMessage.BOOKED_APPOINTMENT.value: "Time slot is unavailable or invalid."}
+                end_time_str = self.calculate_end_time(data["start_time"], duration_minutes)
 
                 cur.execute("""
-                    INSERT INTO appointments (professional_id, customer_id, date, start_time, end_time, address, details, status)
-                    VALUES (?,?,?,?,?,?,?,'Requested')
-                """, (data["prof_id"], data["user_id"], data["date"], data["start_time"], data["end_time"], data["address"], data["details"])) 
+                    SELECT start_time FROM appointments 
+                    WHERE date = ? AND professional_id = ? AND status = 'Confirmed'
+                """, (data["date"], data["prof_id"]))
+                start_times_booked = [row[0] for row in cur.fetchall()]
+
+                available_slots = _calculate_free_day_working_hours(data["start_time"], end_time_str, duration_minutes, start_times_booked)
+
+                if data["start_time"] not in available_slots:
+                    return MessageTypes.MAKE_APPOINTMENT, {
+                        StatusMessage.BOOKED_APPOINTMENT.value: "Time slot is no longer available."
+                    }
+
+                cur.execute("""
+                    INSERT INTO appointments (
+                        professional_id, customer_id, date, start_time, 
+                        end_time, address, details, status
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, 'Requested')
+                """, (data["prof_id"], data["user_id"], data["date"], data["start_time"], end_time_str, data["address"], data["details"])) 
                 
                 conn.commit()
-                return MessageTypes.MAKE_APPOINTMENT, {StatusMessage.BOOKED_APPOINTMENT.value: "Appointment booked successfully"}
+                return MessageTypes.MAKE_APPOINTMENT, {
+                    StatusMessage.BOOKED_APPOINTMENT.value: "Appointment requested successfully"
+                }
                 
         except Exception as e:
-            print(f"Appointment booking dispatcher exception - {e}")
-            return MessageTypes.MAKE_APPOINTMENT, {StatusMessage.FAILED_TO_BOOK_APPOINTMENT.value: "Failed to book, please try again."}
+            print(f"CRITICAL: Appointment booking failure - {e}")
+            return MessageTypes.MAKE_APPOINTMENT, {
+                StatusMessage.FAILED_TO_BOOK_APPOINTMENT.value: "Server error, please try again."
+            }
+            
+            
+    def get_duration_minutes(self, duration_str):
+        try:
+            h, m = map(int, duration_str.split(':'))
+            return (h * 60) + m
+        except (ValueError, AttributeError):
+            return 0
+
+
+    def calculate_end_time(self, start_time_str, duration_minutes):
+        fmt = "%H:%M"
+        start_dt = datetime.strptime(start_time_str, fmt)
+        end_dt = start_dt + timedelta(minutes=duration_minutes)
+        return end_dt.strftime(fmt)
+
 #endregion
 
 
 
+
+#region search
+class ExistingJobsDispatcher(MessageHandler):
+    def handle(self, msg:Message) -> tuple:
+        try:
+            with sqlite3.connect(DATABASE) as conn:
+                cur = conn.cursor()
+                
+                cur.execute("SELECT DISTINCT profession FROM professional")
+                rows = cur.fetchall()
+                if not rows:
+                    return MessageTypes.GET_JOBS, {StatusMessage.FAILED_TO_GET_JOBS.value:"Our professionals are still not verified in the system, sorry!"}
+
+                jobs = []
+                for row in rows:
+                    jobs.append(row[0])
+                    
+                jobs.sort()
+                return MessageTypes.GET_JOBS, {StatusMessage.GOT_JOBS.value:{"jobs":jobs}}          
+        except Exception as e:
+            print("Existing job dispatcher error - ",e)
+            return MessageTypes.GET_JOBS, {StatusMessage.FAILED_TO_GET_JOBS.value:"Failed retrieving info, reload page"}
+
+
+class CitiesByJobDispatcher(MessageHandler):
+    def handle(self, msg:Message) ->tuple:
+        try:
+            with sqlite3.connect(DATABASE) as conn:
+                cur = conn.cursor()
+                
+                profession = msg.data["job"]
+                
+                cur.execute("SELECT DISTINCT service_cities FROM professional WHERE  profession=?", (profession,))
+                rows = cur.fetchall()
+                if not rows:
+                    return MessageTypes.GET_CITIES_BY_JOB, {StatusMessage.FAILED_TO_GET_CITIES.value:"Server error"}
+                
+                unique_cities = set()
+                
+                for row in rows:
+                    city_string = row[0]
+                    if city_string:
+                        parts = [c.strip() for c in city_string.split(',')]
+                        unique_cities.update(parts)
+                
+                cities = sorted(list(unique_cities))
+ 
+                return MessageTypes.GET_CITIES_BY_JOB, {StatusMessage.GOT_CITIES.value:{"cities":cities}}
+        except Exception as e:
+            print("Cities find by job dispatcher exception - ", e)
+            return MessageTypes.GET_CITIES_BY_JOB, {StatusMessage.FAILED_TO_GET_CITIES.value:"Couldn't retrieve cities, refresh page"}
+
+
+class MinimalProfessionalInfo(MessageHandler):
+    def handle(self, msg:Message) -> tuple:
+        try:
+            with sqlite3.connect(DATABASE) as conn:
+                cur = conn.cursor()
+                
+                city = msg.data["city"]
+                job = msg.data["job"]
+                
+                search_term = f"%,{city},%"
+                
+                cur.execute("""SELECT id, description, rating, hour_price FROM professional 
+                            WHERE profession=? AND (',' || REPLACE(service_cities, ', ', ',') || ',') LIKE ? """, (job, search_term))
+            
+                rows = cur.fetchall()
+                if not rows:
+                    return MessageTypes.GET_MINIMAL_FREELANCER_INFO, {StatusMessage.FAILED_TO_GET_MINIMAL_INFO.value:"Error fetching info"}
+                    
+                users = defaultdict(dict)
+                for row in rows:
+                    id, description, rating, hour_price = row
+                    users[id] = {"description":description, "rating":rating, "price":hour_price}
+                    
+                if users:
+                    dict(users)
+                return MessageTypes.GET_MINIMAL_FREELANCER_INFO, {StatusMessage.GOT_MINIMAL_INFO.value:users}
+                
+            
+        except Exception as e:
+            print("Minimal professional info error - ",e)
+            return MessageTypes.GET_MINIMAL_FREELANCER_INFO, {StatusMessage.FAILED_TO_GET_MINIMAL_INFO.value:"Error fetching info"}
+
+
+class FreelancerPublicInfo(MessageHandler):
+    def handle(self, msg:Message) ->tuple:
+        try:
+            with sqlite3.connect(DATABASE) as conn:
+                cur = conn.cursor()
+                
+            cur.execute("""
+                SELECT u.id, p.profession, p.service_cities, 
+                    p.description, p.years_experience, p.avg_job_duration, 
+                    p.rating, p.hour_price, u.full_name 
+                FROM professional p
+                INNER JOIN users u ON p.user_id = u.id
+                WHERE p.id = ?
+            """, (msg.data["id"],))
+            
+            row = cur.fetchone()
+            if not row:
+                return MessageTypes.GET_PUBLIC_PROFILE_INFO, {StatusMessage.FAILED_TO_GET_FREELANCER_PUBLIC_INFO.value:"Couldn't get freelancer's info"}
+                
+            id, profession, cities, description, years, job_duration, rating, price, name = row
+            to_send = {"id":id, "job":profession, "cities":cities, 
+                       "description":description, "years":years, 
+                       "job_duration":job_duration, "rating":rating, 
+                       "price":price, "username":name}
+            
+            return MessageTypes.GET_PUBLIC_PROFILE_INFO, {StatusMessage.GOT_FREELANCER_PUBLIC_INFO.value:to_send}
+            
+            
+            
+        except Exception as e:
+            print("Freelancer public info exception - ", e)
+            return MessageTypes.GET_PUBLIC_PROFILE_INFO, {StatusMessage.FAILED_TO_GET_FREELANCER_PUBLIC_INFO.value:"Couldn't get freelancer's info"}
+
+#endregion
 
 
 
@@ -1082,71 +1231,15 @@ with sqlite3.connect(DATABASE) as conn:
         # cur.execute("""ALTER TABLE notifications 
     #     ADD COLUMN from_id INTEGER REFERENCES users(id) ON DELETE SET NULL;""")
     # conn.commit()
-
-    # cur.execute("DELETE FROM users WHERE 1==1")
-    # conn.commit()
-    # cur.execute("""INSERT INTO notifications (user_id, message, is_read, created_at, from_id)
-    # VALUES (13, 'System alert: Your trial period ended last week.', 0, '2026-03-05 10:00:00', NULL)""")
-
-    # notifications_data = [
-    #     ("Your appointment with Dr. Smith has been confirmed for tomorrow at 10:00 AM.", 0, datetime.now()),
-    #     ("New Message: A freelancer has replied to your project inquiry.", 0, datetime.now()),
-    #     ("Reminder: Your scheduled session starts in 30 minutes. Get ready!", 0, datetime.now()),
-    #     ("Payment Successful: Your transaction for 'Web Design' was processed.", 1, datetime.now()),
-    #     ("Security Alert: A new login was detected from a Chrome browser on Windows.", 0, datetime.now()),
-    #     ("The address for your 'Home Cleaning' service has been updated by the pro.", 0, datetime.now()),
-    #     ("Rate your experience! How was your session with Sarah last night?", 1, datetime.now()),
-    #     ("System Update: We've added new features to your dashboard. Check them out!", 0, datetime.now()),
-    #     ("Booking Cancelled: Unfortunately, the professional is no longer available.", 0, datetime.now()),
-    #     ("Welcome to the platform! Complete your profile to get the best results.", 1, datetime.now())
-    # ]
-
-    # for msg, is_read, created in notifications_data:
-    #     cur.execute("""
-    #         INSERT INTO notifications (user_id, message, is_read, created_at)
-    #         VALUES (11, ?, ?, ?)
-    #     """, (msg, is_read, created))
-    
-    
-    # cur.execute("""UPDATE notifications SET is_read = 0""")
-    
-    # conn.commit()
-    
-    # appointments_to_insert = []
-
-    # base_date = datetime.now()
-    # for i in range(12):        
-    #     app_date = (base_date + timedelta(days=i)).strftime("%Y-%m-%d")
-        
-    #     appointments_to_insert.append((
-    #         11,           # professional_id
-    #         13,           # customer_id
-    #         app_date,     # date
-    #         "10:00",      # start_time
-    #         "11:00",      # end_time
-    #         "123 Main St, Tech City", # address
-    #         f"Session number {i+1} regarding project details.", # details
-    #         "Requested",       # status
-    #         None,         # cancel_reason (NULL)
-    #         datetime.now().isoformat() # created_at
-    #     ))
-
-    # for app in appointments_to_insert:
-    #     cur.execute("""
-    #         INSERT INTO appointments (
-    #             professional_id, customer_id, date, start_time, 
-    #             end_time, address, details, status, cancel_reason, created_at
-    #         )
-    #         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    #     """, app)
-    # conn.commit()
-
-    # cur.execute("SELECT * FROM professional WHERE user_id = '11'")
+    # cur.execute("SELECT avg_job_duration FROM professional")
     # print(cur.fetchall())
+ 
+
     # cur.execute("SELECT * FROM appointments WHERE status='Confirmed'")
     # print(cur.fetchall())
     # cur.execute("""INSERT INTO notifications (user_id, message, is_read, created_at, from_id)
     # VALUES (13, 'You viewed the project files yesterday.', 1, '2026-03-14 15:30:00', 11)""")
     # conn.commit()
+    
     
 #endregion

@@ -36,6 +36,12 @@ function FreelancerPublic({ user, ws, token, appointmentTimes }){
         }
     }, [makeAppointment])
 
+
+    const handleConfirm = (newAppData) => {
+        const fullAppointment = { ...app, ...newAppData };
+        BookAppointment(ws, fullAppointment, token);
+    };
+
     return (<>
 
             { !makeAppointment ? (
@@ -59,7 +65,7 @@ function FreelancerPublic({ user, ws, token, appointmentTimes }){
                     <AppointmentBooking 
                     availability={appointmentTimes} 
                     jobDuration={jobDuration} 
-                    onConfirm={(newApp) => {setApp(prevApp => ({...prevApp, ...newApp})); setMakeAppointment(false)}} 
+                    onConfirm={handleConfirm}
                     onCancel={() => setMakeAppointment(false)}
                     price={price}/>
 

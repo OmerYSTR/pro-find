@@ -1,21 +1,20 @@
 // hooks/useUserSync.js
 import { useEffect } from "react";
-import { UserInfoRequest, MarkReadNotificationsRequest } from "../../socket/RequestHandler";
+import { UserInfoRequest, MarkReadNotificationsRequest, GetPublicProfileInfoRequest } from "../../socket/RequestHandler";
 import webSocketParser from "../../socket/MsgParser";
 import { handleUserInfoResponse, handleProfileInfoResponse, handleUpdatedAppointmentsResponse, handleMarkedReadNotifications, handleAppointmentTimes, handleAppointmentMadeResponse } from "../../socket/ResponseHandlers";
 import { logout } from "../../store/authSlice";
 import { MessageTypes, StatusMessage } from "../../socket/MsgTypes";
 
-export default function useUserSync(ws, token, dispatch, navigate, setViewedFreelancer, setAppointmentTimes, isPublic=false) {
+export default function useUserSync(ws, token, dispatch, navigate, setViewedFreelancer, setAppointmentTimes, target_id, isPublic=false) {
     useEffect(() => {
 
         if (!ws || !token) return;
-        const sendRequest = () =>{ if (!isPublic) {UserInfoRequest(ws, token);}}
+        const sendRequest = () =>{ if (!isPublic) {UserInfoRequest(ws, token);} if (target_id){ GetPublicProfileInfoRequest(ws, target_id, token)}}
 
 
         const handleOpen = () => sendRequest()
         if (ws.readyState === WebSocket.OPEN) {
-
             sendRequest();
         } else {
             ws.addEventListener("open", handleOpen);
@@ -41,6 +40,10 @@ export default function useUserSync(ws, token, dispatch, navigate, setViewedFree
                 const [status, data] = handleProfileInfoResponse(info) 
                 if (status){
                     setViewedFreelancer(data)
+                }
+                else{
+                    alert(data)
+                    navigate("/search")
                 }
             }
            
@@ -72,10 +75,15 @@ export default function useUserSync(ws, token, dispatch, navigate, setViewedFree
                     setAppointmentTimes(null)
             }
 
-            else if (MessageTypes.MAKE_APPOINTMENT === info.type){
-                const [status, msg] = handleAppointmentMadeResponse(info)
-                if (!status){alert(msg)}
-                else{alert("The appointment information has been sent to the freelancer!"); setAppointmentTimes(null)}
+            else if (MessageTypes.MAKE_APPOINTMENT === info.type) {
+                const [status, msg] = handleAppointmentMadeResponse(info);
+                if (status) {
+                    setAppointmentTimes(null)
+                    alert("Success!");
+                    navigate("/search"); 
+                } else {
+                    alert("Error: " + msg);
+                }
             }
 
             else if (MessageTypes.BROAD === info.type){
@@ -93,5 +101,5 @@ export default function useUserSync(ws, token, dispatch, navigate, setViewedFree
             ws.removeEventListener("open", handleOpen);
             ws.removeEventListener("message", handleMessage);
         };
-    }, [ws, token]);
+    }, [ws, token, target_id, isPublic]);
 }
