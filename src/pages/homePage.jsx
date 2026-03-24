@@ -1,5 +1,5 @@
 import { useSelector, useDispatch } from "react-redux";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { useSocket } from "../socket/SocketContext";
 
@@ -14,15 +14,20 @@ export default function HomePage({isPublic=false}) {
     const ws = useSocket();
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const location = useLocation();
     
     const authUser = useSelector((state) => state.auth.userInfo);
     const token = useSelector((state) => state.auth.userToken);
+
+    const { id } = useParams(); 
+
+    const targetId = id || location.state?.freelancerId ||null
 
     const [appointmentTimes, setAppointmentTimes] = useState(null)
 
     const [viewedFreelancer, setViewedFreelancer] = useState(null)
 
-    useUserSync(ws, token, dispatch, navigate, setViewedFreelancer, setAppointmentTimes, isPublic);
+    useUserSync(ws, token, dispatch, navigate, setViewedFreelancer, setAppointmentTimes, targetId, isPublic || (targetId != null));
 
     const isLoaded = authUser && Object.keys(authUser).length > 0;
     

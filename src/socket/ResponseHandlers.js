@@ -155,7 +155,13 @@ export const handleAppointmentMadeResponse = (payload) =>{
 
 //#region Search
 export const handleProfileInfoResponse = (payload) => {
-    return;
+    let data = payload.data
+    if (StatusMessage.GOT_FREELANCER_PUBLIC_INFO in data){
+        return [true, data[StatusMessage.GOT_FREELANCER_PUBLIC_INFO]]
+    }
+    else{
+        return [false, data[StatusMessage.FAILED_TO_GET_FREELANCER_PUBLIC_INFO]]
+    }
 }
 
 
@@ -177,6 +183,16 @@ export const handleCitiesResponse = (payload) =>{
         return [true, data[StatusMessage.GOT_CITIES]["cities"]]
     else
         return [false, data[StatusMessage.FAILED_TO_GET_CITIES]]
+}
+
+
+export const handleMinimalFreelancerInfoResponse = (payload) =>{
+    let data = payload.data
+    if (StatusMessage.GOT_MINIMAL_INFO in data){
+        return [true, data[StatusMessage.GOT_MINIMAL_INFO]]
+    }
+    else
+        return [false, data[StatusMessage.FAILED_TO_GET_MINIMAL_INFO]]
 }
 
 //#endregion

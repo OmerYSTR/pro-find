@@ -39,6 +39,7 @@ export default function App() {
         <Route path="/signup" element={<SignUpPage />} />
         <Route element={<ProtectedRoutes />}>
           <Route path="/" element={<HomePage isPublic={false}/>} />
+          <Route path="/profile/:id" element={<HomePage isPublic={true} />} />
           <Route path="/search" element={<Search/>}/>
           <Route path="/schedule" element={<Schedule/>} />
         </Route>

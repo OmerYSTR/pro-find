@@ -110,7 +110,16 @@ export function BookAppointment(ws, app, token){
 
 //#region Search
 export function GetPublicProfileInfoRequest(ws, targetId, token){
-    return;
+    let payload = {id:targetId}
+    let msg = MsgBuild(MessageTypes.GET_PUBLIC_PROFILE_INFO, payload, token, "JSON")
+    ws.send(msg)
+}
+
+
+export function GetMinimalFreelancerInfo(ws, token, city, job){
+    let payload = {"city":city, "job":job}
+    let msg = MsgBuild(MessageTypes.GET_MINIMAL_FREELANCER_INFO, payload, token, "JSON")
+    ws.send(msg)
 }
 
 export function GetAllJobs(ws, token)
