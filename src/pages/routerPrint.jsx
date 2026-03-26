@@ -23,12 +23,12 @@ function Navbar({ role }) {
           <span>🏠</span> <span>Home Page</span>
         </Link>
 
-        <Link
+        {/* <Link
           to="/schedule"
           className="text-gray-200 px-4 py-2 rounded-md hover:bg-slate-700 transition flex items-center gap-3 justify-start"
         >
           <span>📅</span> <span>My Schedule</span>
-        </Link>
+        </Link> */}
 
         {role === "User" && (
           <Link

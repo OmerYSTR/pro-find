@@ -84,7 +84,8 @@ export function UpcomingAppointmentsView({ appointments }){
         <h3 className="text-xl font-semibold text-white mb-6 text-left">Upcoming Appointments</h3>
         <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-grow">
             {appointments.length > 0 ? (
-                appointments.slice(0, 5).map((app, idx) => (
+                //Here I can control if I want to show a limited amount of appointments
+                appointments.map((app, idx) => (
                     <div key={idx} className="bg-slate-700/30 p-4 rounded-xl text-slate-300 text-sm border border-slate-600/50 shadow-inner flex flex-col items-start">
                         <div className="flex flex-col space-y-2 w-full">
                             <p className="flex items-start justify-start">

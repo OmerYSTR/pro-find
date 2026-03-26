@@ -26,13 +26,13 @@ export default function UserView() {
 
             <div className="bg-gradient-to-br from-blue-600/20 to-purple-600/20 py-16 px-8 rounded-3xl border border-blue-500/20 flex flex-col items-center justify-center shadow-2xl">
                 <h3 className="text-2xl font-bold text-white mb-8">Quick Actions</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-2xl">
+                <div className="grid grid-cols-1 sm:grid-cols-1 gap-6 w-full max-w-2xl">
                     <Link to="/search" className="flex items-center justify-center py-10 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition-all text-lg font-semibold border border-slate-600 shadow-lg hover:scale-105">
                         Find Freelancers
                     </Link>
-                    <Link to="/schedule" className="flex items-center justify-center py-10 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition-all text-lg font-semibold border border-slate-600 shadow-lg hover:scale-105">
+                    {/* <Link to="/schedule" className="flex items-center justify-center py-10 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition-all text-lg font-semibold border border-slate-600 shadow-lg hover:scale-105">
                         View Calendar
-                    </Link>
+                    </Link> */}
                 </div>
             </div>
 

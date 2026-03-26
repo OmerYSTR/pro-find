@@ -856,6 +856,9 @@ class BookAppointmentDispatcher(MessageHandler):
                     VALUES (?, ?, ?, ?, ?, ?, ?, 'Requested')
                 """, (data["prof_id"], data["user_id"], data["date"], data["start_time"], end_time_str, data["address"], data["details"])) 
                 
+                cur.execute("""INSERT INTO notifications (user_id, message, is_read, created_at)
+                            VALUES (?, ?, 0, ?)""", (data["prof_id"], "You have a pending appointment waiting for you", datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+                
                 conn.commit()
                 return MessageTypes.MAKE_APPOINTMENT, {
                     StatusMessage.BOOKED_APPOINTMENT.value: "Appointment requested successfully"
@@ -1235,8 +1238,8 @@ with sqlite3.connect(DATABASE) as conn:
     # print(cur.fetchall())
  
 
-    # cur.execute("SELECT * FROM appointments WHERE status='Confirmed'")
-    # print(cur.fetchall())
+    cur.execute("SELECT * FROM pending_users")
+    print(cur.fetchall())
     # cur.execute("""INSERT INTO notifications (user_id, message, is_read, created_at, from_id)
     # VALUES (13, 'You viewed the project files yesterday.', 1, '2026-03-14 15:30:00', 11)""")
     # conn.commit()
