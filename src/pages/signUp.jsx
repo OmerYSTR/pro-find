@@ -1,4 +1,4 @@
-import { useState, useEffect, useInsertionEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate} from "react-router-dom";
 import { BackToLogin, freelancerProfessions, RolePopup, InputField, ErrorMessage, SingleChoiceDropDownMenu, MultiChoiceDropDownMenu, israeliLocalities, EmailVerification} from "./signUpModule";
 import {useSocket} from "../socket/SocketContext"

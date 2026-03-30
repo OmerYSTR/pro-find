@@ -11,14 +11,17 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from token_handler import is_token_valid, create_token, decode
 from collections import defaultdict
+from os import getenv
+from dotenv import load_dotenv
 
 
 #region Consts
 DATABASE = r"C:\Coding\pro-find\Python\my_app.db"
-PEPPER = "CYBERISH"
+load_dotenv()
 
-EMAIL = "x1xprofindx1x@gmail.com"
-AUTHENTICATION_PAS = "dhgsdxvrlemuyupd"
+EMAIL = getenv("EMAIL")
+PEPPER = getenv("PEPPER")
+AUTHENTICATION_PAS = getenv("AUTHENTICATION_PAS")
 
 
 with open (r"C:\Coding\pro-find\Python\professional.txt", 'r') as f:
@@ -30,12 +33,11 @@ with open(r"C:\Coding\pro-find\Python\cities.txt", 'r') as f:
 #endregion
 
 
-
 def hash_password(password:str, salt:str) ->str:
+
     combined_encoded= (salt+password+PEPPER).encode()
-    
-    hashed = hashlib.sha256(combined_encoded).hexdigest()
-    return hashed
+    return hashlib.sha256(combined_encoded).hexdigest()
+
 
 
 
@@ -45,8 +47,7 @@ class Message:
         self.type_of = payload["type"]
         self.data = payload["data"]
         self.token = payload["token"]
-        
-        
+              
         
         
 class MessageHandler(ABC):
@@ -54,7 +55,6 @@ class MessageHandler(ABC):
     def handle(self, msg:Message) ->tuple:
         pass        
     
-
 
 #region Dispatcher
 class MessageDispatcher:
@@ -65,7 +65,7 @@ class MessageDispatcher:
                     MessageTypes.CHANGE_PASS.value}
     
     def __init__(self):
-        self._handlers:dict[str, MessageHandler] ={}
+        self._handlers={}
 
        
     def register(self, msg_type, cls):
@@ -76,7 +76,9 @@ class MessageDispatcher:
         if msg.type_of not in self.no_token_check:
             if not is_token_valid(msg.token):
                 return MessageTypes.BROAD, {StatusMessage.TOKEN_BAD.value:"Token format invalid"}
+            
         handler_class = self._handlers.get(msg.type_of)
+        
         if not handler_class:
             raise Exception("No handler registered")
         
@@ -86,7 +88,6 @@ class MessageDispatcher:
         
 def configure_dispatcher() -> MessageDispatcher:
     d = MessageDispatcher()
-    
     d.register(MessageTypes.LOGIN.value, LoginDispatcher)
     d.register(MessageTypes.USER_SIGNUP.value, UserSignUpService)
     d.register(MessageTypes.FREELANCER_SIGNUP.value, FreelancerSignUpService)
@@ -103,7 +104,6 @@ def configure_dispatcher() -> MessageDispatcher:
     d.register(MessageTypes.GET_CITIES_BY_JOB.value, CitiesByJobDispatcher)
     d.register(MessageTypes.GET_MINIMAL_FREELANCER_INFO.value, MinimalProfessionalInfo)
     d.register(MessageTypes.GET_PUBLIC_PROFILE_INFO.value, FreelancerPublicInfo)
-    
     return d
         
         
@@ -132,21 +132,17 @@ class LoginDispatcher(MessageHandler):
         except Exception as e:
             print("Login dispatcher - ", e)
             return MessageTypes.LOGIN, {StatusMessage.FAILED_LOG_IN.value:"Client error"}
-        
-    
     
     
     
     
 class UserSignUpService(MessageHandler):
     def handle(self, msg:Message) -> tuple:
-        #validate that info is good
         v = UserSignUpValidator()
         info_is_good, message = v.validate(msg)
         if not info_is_good:
             return MessageTypes.USER_SIGNUP, message
         
-        #Checks that user doesn't exist under the same email and sends email if valid
         status, message = self._add_pending_user(msg)
         if not status:
             return MessageTypes.USER_SIGNUP, message
@@ -162,21 +158,18 @@ class UserSignUpService(MessageHandler):
                 cur = conn.cursor()
                 conn.execute("BEGIN")
                 
-                #Checks if email already exists in system
                 cur.execute("SELECT 1 FROM users WHERE email=?", (data["email"],))
 
                 if cur.fetchone():
                     conn.rollback()
                     return False, {StatusMessage.FAILED_SIGN_UP.value:"Email already in use"}
             
-                #Checks if email exists in table
                 cur.execute("""SELECT expires_at FROM pending_users WHERE email=?""", (data["email"],))
                 find = cur.fetchone()
                 
                 if find:
                     expires_at = datetime.strptime(find[0], "%Y-%m-%d %H:%M:%S.%f")
                     
-                    #If time expired
                     if expires_at<datetime.now():
                         cur.execute("""DELETE FROM pending_users WHERE email=?""", (data["email"],))      
                     else:
@@ -188,10 +181,8 @@ class UserSignUpService(MessageHandler):
                 ver = EmailVerification(data["email"])   
                 
                 cur.execute("""
-                INSERT INTO pending_users
-                (full_name, email, password_hash, salt, user_type, verification_code, expires_at)
-                VALUES (?,?,?,?,?,?,?)
-            """, (data["name"], data["email"], password_hash, salt, data["role"], ver.verification_code, ver.expires_at))
+                INSERT INTO pending_users (full_name, email, password_hash, salt, user_type, verification_code, expires_at)
+                VALUES (?,?,?,?,?,?,?) """, (data["name"], data["email"], password_hash, salt, data["role"], ver.verification_code, ver.expires_at))
                  
                 if not ver.send_verification_code():
                     conn.rollback()
@@ -201,8 +192,6 @@ class UserSignUpService(MessageHandler):
                 return True, {MessageTypes.VERIFICATION.value:"Sending verification"}
                     
         except sqlite3.IntegrityError:
-            # Handles race condition: two requests at same time trying to insert same email
-            conn.rollback()
             return False, {StatusMessage.FAILED_SIGN_UP.value: "Email already in use"}
 
         except Exception as e:
@@ -216,14 +205,12 @@ class UserSignUpService(MessageHandler):
     
 class FreelancerSignUpService(MessageHandler):
     def handle(self, msg:Message) -> tuple:
-        #Validate that info is good
         v = FreelancerSignUpValidator()
         info_is_good, message = v.validate(msg)
         if not info_is_good:
             return MessageTypes.FREELANCER_SIGNUP, message
         
         status, message = self._add_pending_freelancer(msg)
-
         if not status:
             return MessageTypes.FREELANCER_SIGNUP, message
         
@@ -237,7 +224,6 @@ class FreelancerSignUpService(MessageHandler):
                 cur = conn.cursor()
                 conn.execute("BEGIN")
                 
-                #Checks if email already exists in system
                 cur.execute("SELECT 1 FROM users WHERE email=?", (data["email"],))
 
                 if cur.fetchone():
@@ -245,13 +231,11 @@ class FreelancerSignUpService(MessageHandler):
                     return False, {StatusMessage.FAILED_SIGN_UP.value:"Email already in use"}
                 
     
-                #Checks if email exists in table
                 cur.execute("SELECT expires_at FROM pending_users WHERE email=?", (data["email"],))
                 row = cur.fetchone()
 
                 if row:
                     expires_at = datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S.%f")
-                    #If time expired
                     if expires_at<datetime.now():
                         cur.execute("""DELETE FROM pending_users WHERE email=?""", (data["email"],))    
                     else:
@@ -278,7 +262,6 @@ class FreelancerSignUpService(MessageHandler):
                 return True, {MessageTypes.VERIFICATION.value: "Sending verification"}
         
         except sqlite3.IntegrityError:
-            conn.rollback()
             return False, {StatusMessage.FAILED_SIGN_UP.value: "Email already in use"}
 
         except Exception as e:
@@ -294,7 +277,6 @@ class VerificationDispatcher(MessageHandler):
     def handle(self, msg:Message) -> tuple:
         verified, message = EmailVerification.check_verification_code(msg)
         if verified:
-            
             if self.log_new_customer(msg):
                 return MessageTypes.VERIFICATION,message
             else:
@@ -326,11 +308,8 @@ class VerificationDispatcher(MessageHandler):
                                 VALUES (?,?,?,?,?)""", (name, email, password_hash, user_type, salt))
                 
                 elif role == "Freelancer":
-                    cur.execute("""SELECT full_name, password_hash, salt, user_type, 
-                                profession, cities, years, job_duration, description, 
-                                start_working, finish_working, hour_price 
-                                FROM pending_users 
-                                WHERE email=?""",(email,))
+                    cur.execute("""SELECT full_name, password_hash, salt, user_type, profession, cities, years, job_duration, description, 
+                                start_working, finish_working, hour_price FROM pending_users WHERE email=?""",(email,))
                     row = cur.fetchone()
                     if not row:
                         conn.rollback()
@@ -549,72 +528,61 @@ class UserInfoDispatcher(MessageHandler):
             return MessageTypes.GET_USER_INFO, {StatusMessage.FAILED_TO_GET_USER_INFO.value:"Couldn't find user"}
 
 
-    def _get_appointments(self, user_id, cur, role) -> list[dict]:
-        
-        is_freelancer = (role=="Freelancer")
-        
-        now = datetime.now()
-        current_date = now.strftime("%Y-%m-%d")
-        current_time = now.strftime("%H:%M")
-
-        actual_id = user_id
-        if is_freelancer:
-            id_column = "a.professional_id"
-            user_join = "JOIN users u ON a.customer_id = u.id"
-        else:
-            id_column = "a.customer_id"
-            user_join = """
-                JOIN professional p ON a.professional_id = p.user_id 
-                JOIN users u ON p.user_id = u.id
-            """ 
-
-        query = f"""
-            SELECT u.full_name, a.date, a.id,
-                a.start_time, a.end_time, a.address, 
-                a.details, a.status 
-            FROM appointments a
-            {user_join}
-            WHERE {id_column} = ? 
-        """
-
-        if not is_freelancer:
-            query += " AND a.status = 'Confirmed'"
-
-        query += """
-            AND (a.date > ? OR (a.date = ? AND a.start_time >= ?))
-            ORDER BY a.date ASC, a.start_time ASC
-        """
-        
-        cur.execute(query, (actual_id, current_date, current_date, current_time))
-        rows = cur.fetchall()
-        
-        appointments = []
-        for row in rows:
-            name, app_date, app_id, start, end, addr, det, stat = row
+    def _get_appointments(self, user_id, cur, role) -> list:
+            is_pro = True if role == "Freelancer" else False
             
-            try:
-                date_obj = datetime.strptime(str(app_date), "%Y-%m-%d")
-                display_date = date_obj.strftime("%d/%m/%Y")
-            except ValueError:
-                display_date = str(app_date)
+            now = datetime.now()
+            today = now.strftime("%Y-%m-%d")
+            time_now = now.strftime("%H:%M")
             
-            appointments.append({
-                "id": app_id,
-                "person_name": name, 
-                "display_date": display_date,
-                "date": str(app_date), 
-                "start_time": str(start), 
-                "end_time": str(end), 
-                "address": addr, 
-                "details": det, 
-                "status": stat, 
-                "iso_timestamp": f"{app_date}T{start}"
-            })
+            if is_pro:
+                query = """
+                    SELECT u.full_name, a.date, a.id, a.start_time, a.end_time, 
+                        a.address, a.details, a.status 
+                    FROM appointments a
+                    JOIN users u ON a.customer_id = u.id
+                    WHERE a.professional_id = ?
+                """
+            else:
+                query = """
+                    SELECT u.full_name, a.date, a.id, a.start_time, a.end_time, 
+                        a.address, a.details, a.status 
+                    FROM appointments a
+                    JOIN professional p ON a.professional_id = p.user_id 
+                    JOIN users u ON p.user_id = u.id
+                    WHERE a.customer_id = ? AND a.status = 'Confirmed'
+                """
+
+            query += """ 
+                AND (a.date > ? OR (a.date = ? AND a.start_time >= ?))
+                ORDER BY a.date ASC, a.start_time ASC
+            """
             
-        return appointments
+            cur.execute(query, (user_id, today, today, time_now))
+            rows = cur.fetchall()
+            
+            results = []
+            for r in rows:
+                d_parts = str(r[1]).split('-')
+                display_date = f"{d_parts[2]}/{d_parts[1]}/{d_parts[0]}" if len(d_parts) == 3 else r[1]
+                
+                results.append({
+                    "id": r[2],
+                    "person_name": r[0], 
+                    "display_date": display_date,
+                    "date": str(r[1]), 
+                    "start_time": str(r[3]), 
+                    "end_time": str(r[4]), 
+                    "address": r[5], 
+                    "details": r[6], 
+                    "status": r[7],
+                    "timestamp": f"{r[1]} {r[3]}"
+                })
+                
+            return results
             
         
-    def _get_notifications(self, user_id, cur) -> list[dict]:
+    def _get_notifications(self, user_id, cur) -> list:
         query = """
             SELECT n.message, n.created_at, n.is_read, u.full_name as sender_name
             FROM notifications n
@@ -626,17 +594,17 @@ class UserInfoDispatcher(MessageHandler):
         rows = cur.fetchall()      
 
         notifications = []
-        for row in rows:
-            message, created_at, is_read, sender_name = row            
+        for r in rows:
+            message, raw_date, is_read, sender_name = r            
             try:
-                dt_obj = datetime.strptime(created_at, "%Y-%m-%d %H:%M:%S.%f")
+                dt_obj = datetime.strptime(raw_date, "%Y-%m-%d %H:%M:%S.%f")
                 formatted_date = dt_obj.strftime("%d/%m/%y")
             except ValueError:
                 try:
-                    dt_obj = datetime.strptime(created_at, "%Y-%m-%d %H:%M:%S")
+                    dt_obj = datetime.strptime(raw_date, "%Y-%m-%d %H:%M:%S")
                     formatted_date = dt_obj.strftime("%d/%m/%y")
                 except Exception:
-                    formatted_date = str(created_at)[:10]
+                    formatted_date = str(raw_date)[:10]
 
             notifications.append({
                 "message": message,
@@ -655,11 +623,7 @@ class MarkNotificationsReadDispatcher(MessageHandler):
             user_id = msg.data["user_id"]
             with sqlite3.connect(DATABASE) as conn:
                 cur = conn.cursor()
-                cur.execute("""
-                    UPDATE notifications 
-                    SET is_read = 1 
-                    WHERE user_id = ? AND is_read = 0
-                """, (user_id,))
+                cur.execute("UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0", (user_id,))
                 conn.commit()
             return MessageTypes.MARK_READ_NOTIFICATION, {StatusMessage.MARKED_READ_NOTIFICATIONS.value: ""}
         except Exception as e:
@@ -673,14 +637,19 @@ class ChangeAppointmentStatusDispatcher(MessageHandler):
         try:
             with sqlite3.connect(DATABASE) as conn:
                 cur = conn.cursor()
-                apps: dict = msg.data["appointments"]
+                apps = msg.data["appointments"]
+                                
+                worked = []
+                failed = []
                 
-                processed_results = {"successful": [], "failed": {}}
-                
-                first_key = int(next(iter(apps)))
+                first_key = int(list(apps.keys())[0])
                 cur.execute("SELECT u.full_name, a.professional_id FROM appointments a JOIN users u ON a.professional_id = u.id WHERE a.id = ?", (first_key,))
                 res = cur.fetchone()
-                prof_name, p_id = res if res else ("Freelancer", None)
+                if not res:
+                    prof_name = "Freelancer"
+                    p_id = None
+                else:
+                    prof_name, p_id = res 
 
                 status_map = {'accepted': "Confirmed", 'cancelled': "Cancelled"}
 
@@ -691,13 +660,13 @@ class ChangeAppointmentStatusDispatcher(MessageHandler):
                         if target_status == "Confirmed":
                             if self._is_time_slot_taken(cur, app_id):
                                 cur.execute("DELETE FROM appointments WHERE id=?", (app_id,))
-                                processed_results["failed"][app_id] = "Slot already taken"
+                                failed[app_id] = "Slot already taken"
                                 continue
 
                         cur.execute("SELECT customer_id FROM appointments WHERE id=?", (app_id,))
                         row = cur.fetchone()
                         if not row:
-                            processed_results["failed"][app_id] = "Appointment not found"
+                            failed[app_id] = "Appointment not found"
                             continue
                         
                         u_id = row[0]
@@ -713,21 +682,21 @@ class ChangeAppointmentStatusDispatcher(MessageHandler):
                                     VALUES (?, ?, 0, ?, ?)""", 
                                     (u_id, msg_text, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), p_id))
                         
-                        processed_results["successful"].append(app_id)
+                        worked.append(app_id)
 
                     except Exception as inner_e:
-                        processed_results["failed"][app_id] = str(inner_e)
+                        failed[app_id] = str(inner_e)
                         continue
 
                 conn.commit()
                 
                 return MessageTypes.UPDATE_APPOINTMENTS_STATUS, {
                     StatusMessage.UPDATED_APP_STATUS.value: "Batch processed",
-                    "results": processed_results
+                    "results": {"processed":worked, "Failed":failed}
                 }
 
         except Exception as e:
-            print(f"Critical Dispatcher Error: {e}")
+            print(f"Appointment Status change Dispatcher Error: {e}")
             return MessageTypes.UPDATE_APPOINTMENTS_STATUS, {StatusMessage.FAILED_TO_UPDATE_APP_STATUS.value: "System error"}
         
     def _is_time_slot_taken(self, cur, app_id):
@@ -738,13 +707,8 @@ class ChangeAppointmentStatusDispatcher(MessageHandler):
         
         p_id, a_date, a_start, a_end = target
 
-        query = """
-            SELECT id FROM appointments 
-            WHERE professional_id = ? 
-            AND date = ? 
-            AND status = 'Confirmed'
-            AND id != ?
-            AND (? < end_time AND start_time < ?)
+        query = """SELECT id FROM appointments WHERE professional_id = ? AND date = ? 
+            AND status = 'Confirmed' AND id != ? AND (? < end_time AND start_time < ?)
         """
         cur.execute(query, (p_id, a_date, app_id, a_start, a_end))
         return cur.fetchone() is not None
@@ -768,17 +732,15 @@ class AppointmentStartTimesDispatcher(MessageHandler):
                 cur.execute("""SELECT start_time, date FROM appointments WHERE professional_id=? 
                             AND date BETWEEN date('now') AND date('now', '+1 month') 
                             AND status='Confirmed' ORDER BY date ASC; """, (pro_id,))
-                
-                appointments = cur.fetchall()
-                
-                existing_appointments = defaultdict(list)
-
-                if appointments:
-                    for row in appointments:
-                        time = row[0]
-                        date =row[1]
-                        existing_appointments[date].append(time)
-                    existing_appointments = dict(existing_appointments)
+                            
+                existing_appointments = {}
+                for row in cur.fetchall():
+                    time, date = row[0], row[1]
+                    if date not in existing_appointments:
+                        existing_appointments[date] = []
+                    existing_appointments[date].append(time)
+               
+                existing_appointments = dict(existing_appointments)
                     
                 h,m = map(int, job_duration.split(":"))
                 duration_minutes = (h*60) + m
@@ -800,7 +762,10 @@ class AppointmentStartTimesDispatcher(MessageHandler):
 
     
 
-def _calculate_free_day_working_hours(start_time, end_time, job_duration, existing_appointments=[]) ->list:
+def _calculate_free_day_working_hours(start_time, end_time, job_duration, existing_appointments=None) ->list:
+    if existing_appointments is None:
+        existing_appointments=[]
+    
     format = "%H:%M"
     current_slot = datetime.strptime(start_time, format)
     end_of_day = datetime.strptime(end_time, format)
@@ -823,61 +788,41 @@ class BookAppointmentDispatcher(MessageHandler):
         try:
             with sqlite3.connect(DATABASE) as conn:
                 cur = conn.cursor()
-                data = msg.data["app"]
+                app = msg.data["app"]
                 
-                cur.execute("SELECT avg_job_duration FROM professional WHERE user_id = ?", (data["prof_id"],))
+                cur.execute("SELECT avg_job_duration FROM professional WHERE user_id = ?", (app["prof_id"],))
                 row = cur.fetchone()
                 if not row:
                     return MessageTypes.MAKE_APPOINTMENT, {StatusMessage.FAILED_TO_BOOK_APPOINTMENT.value: "Freelancer not found"}
                 
                 duration_str = row[0]
-                duration_minutes = self.get_duration_minutes(duration_str)
+                h, m = map(int, duration_str.split(':'))
+                duration_minutes = (h * 60) + m
 
-                end_time_str = self.calculate_end_time(data["start_time"], duration_minutes)
+                end_time_str = self.calculate_end_time(app["start_time"], duration_minutes)
 
-                cur.execute("""
-                    SELECT start_time FROM appointments 
-                    WHERE date = ? AND professional_id = ? AND status = 'Confirmed'
-                """, (data["date"], data["prof_id"]))
+                cur.execute("SELECT start_time FROM appointments WHERE date = ? AND professional_id = ? AND status = 'Confirmed'", (app["date"], app["prof_id"]))
                 start_times_booked = [row[0] for row in cur.fetchall()]
 
-                available_slots = _calculate_free_day_working_hours(data["start_time"], end_time_str, duration_minutes, start_times_booked)
+                available_slots = _calculate_free_day_working_hours(app["start_time"], end_time_str, duration_minutes, start_times_booked)
 
-                if data["start_time"] not in available_slots:
-                    return MessageTypes.MAKE_APPOINTMENT, {
-                        StatusMessage.BOOKED_APPOINTMENT.value: "Time slot is no longer available."
-                    }
+                if app["start_time"] not in available_slots:
+                    return MessageTypes.MAKE_APPOINTMENT, {StatusMessage.FAILED_TO_BOOK_APPOINTMENT.value: "Time slot is no longer available."}
 
                 cur.execute("""
-                    INSERT INTO appointments (
-                        professional_id, customer_id, date, start_time, 
-                        end_time, address, details, status
-                    )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, 'Requested')
-                """, (data["prof_id"], data["user_id"], data["date"], data["start_time"], end_time_str, data["address"], data["details"])) 
+                    INSERT INTO appointments (professional_id, customer_id, date, start_time, end_time, address, details, status)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, 'Requested')""", (app["prof_id"], app["user_id"], app["date"], app["start_time"], end_time_str, app["address"], app["details"])) 
                 
                 cur.execute("""INSERT INTO notifications (user_id, message, is_read, created_at)
-                            VALUES (?, ?, 0, ?)""", (data["prof_id"], "You have a pending appointment waiting for you", datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+                            VALUES (?, ?, 0, ?)""", (app["prof_id"], "You have a pending appointment waiting for you", datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
                 
                 conn.commit()
-                return MessageTypes.MAKE_APPOINTMENT, {
-                    StatusMessage.BOOKED_APPOINTMENT.value: "Appointment requested successfully"
-                }
+                return MessageTypes.MAKE_APPOINTMENT, {StatusMessage.BOOKED_APPOINTMENT.value: "Appointment requested successfully"}
                 
         except Exception as e:
             print(f"CRITICAL: Appointment booking failure - {e}")
-            return MessageTypes.MAKE_APPOINTMENT, {
-                StatusMessage.FAILED_TO_BOOK_APPOINTMENT.value: "Server error, please try again."
-            }
+            return MessageTypes.MAKE_APPOINTMENT, {StatusMessage.FAILED_TO_BOOK_APPOINTMENT.value: "Server error, please try again."}
             
-            
-    def get_duration_minutes(self, duration_str):
-        try:
-            h, m = map(int, duration_str.split(':'))
-            return (h * 60) + m
-        except (ValueError, AttributeError):
-            return 0
-
 
     def calculate_end_time(self, start_time_str, duration_minutes):
         fmt = "%H:%M"
@@ -981,28 +926,23 @@ class FreelancerPublicInfo(MessageHandler):
             with sqlite3.connect(DATABASE) as conn:
                 cur = conn.cursor()
                 
-            cur.execute("""
-                SELECT u.id, p.profession, p.service_cities, 
-                    p.description, p.years_experience, p.avg_job_duration, 
-                    p.rating, p.hour_price, u.full_name 
-                FROM professional p
-                INNER JOIN users u ON p.user_id = u.id
-                WHERE p.id = ?
-            """, (msg.data["id"],))
-            
-            row = cur.fetchone()
-            if not row:
-                return MessageTypes.GET_PUBLIC_PROFILE_INFO, {StatusMessage.FAILED_TO_GET_FREELANCER_PUBLIC_INFO.value:"Couldn't get freelancer's info"}
+                cur.execute("""
+                    SELECT u.id, p.profession, p.service_cities, p.description, p.years_experience, p.avg_job_duration, 
+                    p.rating, p.hour_price, u.full_name FROM professional p INNER JOIN users u ON p.user_id = u.id
+                    WHERE p.id = ?
+                """, (msg.data["id"],))
                 
-            id, profession, cities, description, years, job_duration, rating, price, name = row
-            to_send = {"id":id, "job":profession, "cities":cities, 
-                       "description":description, "years":years, 
-                       "job_duration":job_duration, "rating":rating, 
-                       "price":price, "username":name}
-            
-            return MessageTypes.GET_PUBLIC_PROFILE_INFO, {StatusMessage.GOT_FREELANCER_PUBLIC_INFO.value:to_send}
-            
-            
+                row = cur.fetchone()
+                if not row:
+                    return MessageTypes.GET_PUBLIC_PROFILE_INFO, {StatusMessage.FAILED_TO_GET_FREELANCER_PUBLIC_INFO.value:"Couldn't get freelancer's info"}
+                    
+                id, profession, cities, description, years, job_duration, rating, price, name = row
+                to_send = {"id":id, "job":profession, "cities":cities, 
+                        "description":description, "years":years, 
+                        "job_duration":job_duration, "rating":rating, 
+                        "price":price, "username":name}
+                
+                return MessageTypes.GET_PUBLIC_PROFILE_INFO, {StatusMessage.GOT_FREELANCER_PUBLIC_INFO.value:to_send}  
             
         except Exception as e:
             print("Freelancer public info exception - ", e)
@@ -1102,7 +1042,7 @@ class FreelancerSignUpValidator(Validator):
                 return status,{error_message:"price per hour is not in correct format "}
             
             if data["hourPrice"] > 1000:
-                return status, {error_message, "your wage is to expensive for this site"}
+                return status, {error_message: "your wage is to expensive for this site"}
             
             if len(data["description"]) > 500:
                 return status, {error_message:f"Description must be less then 500 characters, yours is {len(data['description'])}"}
@@ -1149,21 +1089,20 @@ class EmailVerification:
         message["From"] = EMAIL
         message["To"] = self.email
 
-        html = f"""
-    <html>
-      <body style="font-family: Arial, sans-serif; color: #333;">
-        <div style="max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
-          <h2 style="color: #2a9d8f;">Welcome to Pro-Find!</h2>
-          <p>Hi there,</p>
-          <p>Thanks for signing up. Your verification code is:</p>
-          <p style="font-size: 24px; font-weight: bold; color: #e76f51;">{self.verification_code}</p>
-          <p>Please enter this code in the app to verify your account.</p>
-          <hr>
-          <p style="font-size: 12px; color: #888;">If you didn't sign up, you can ignore this email.</p>
-        </div>
-      </body>
-    </html>
-    """
+        html = f""" <html>
+                        <body style="font-family: Arial, sans-serif; color: #333;">
+                            <div style="max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
+                            <h2 style="color: #2a9d8f;">Welcome to Pro-Find!</h2>
+                            <p>Hi there,</p>
+                            <p>Thanks for signing up. Your verification code is:</p>
+                            <p style="font-size: 24px; font-weight: bold; color: #e76f51;">{self.verification_code}</p>
+                            <p>Please enter this code in the app to verify your account.</p>
+                            <hr>
+                            <p style="font-size: 12px; color: #888;">If you didn't sign up, you can ignore this email.</p>
+                            </div>
+                        </body>
+                    </html>
+                 """
     
         text = f"Hi there!\nYour verification code is {self.verification_code}\nPlease enter it in the app."
         message.attach(MIMEText(text, "plain"))
@@ -1212,37 +1151,3 @@ class EmailVerification:
             print (f"Verification code check - {e}")
             return False, {StatusMessage.VERIFICATION_BAD.value:"Not all fields were sent"}
 
-
-
-#region table checks
-with sqlite3.connect(DATABASE) as conn:
-    cur = conn.cursor()
-# #     salt = os.urandom(16).hex()
-# #     password_hash = hash_password("111", salt)
-# #     cur.execute("""INSERT INTO users (full_name, email, password_hash, user_type, salt)
-# #                 VALUES (?,?,?,?,?)""", ("Ido Yaffet", "idoy90@gmail.com", password_hash, "User", salt))
-# #     conn.commit()
-    
-
-    # cur.execute("""UPDATE notifications SET is_read = 0""")
-    # conn.commit()
-
-    # cur.execute("PRAGMA table_info(appointments)")
-    # columns = cur.fetchall()
-    # for col in columns:
-    #     print(col)
-        # cur.execute("""ALTER TABLE notifications 
-    #     ADD COLUMN from_id INTEGER REFERENCES users(id) ON DELETE SET NULL;""")
-    # conn.commit()
-    # cur.execute("SELECT avg_job_duration FROM professional")
-    # print(cur.fetchall())
- 
-
-    cur.execute("SELECT * FROM pending_users")
-    print(cur.fetchall())
-    # cur.execute("""INSERT INTO notifications (user_id, message, is_read, created_at, from_id)
-    # VALUES (13, 'You viewed the project files yesterday.', 1, '2026-03-14 15:30:00', 11)""")
-    # conn.commit()
-    
-    
-#endregion

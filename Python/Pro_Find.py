@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from collections import deque
 import time
 import sqlite3
-from collections import defaultdict
+
 
 MAX_MESSAGES = 15
 TIME_WINDOW = 20 
@@ -17,21 +17,25 @@ DATABASE = r"C:\Coding\pro-find\Python\my_app.db"
 MAX_CONNECTIONS_PER_IP = 5     
 IP_TIMEOUT = 60               
 
-ip_connections = defaultdict(list)
+ip_connections = {}
 
 
 
 
-def can_accept_connection(ip: str) -> bool:
-    now = time.time()
-    
-    ip_connections[ip] = [t for t in ip_connections[ip] if now - t < IP_TIMEOUT]
-    
-    if len(ip_connections[ip]) >= MAX_CONNECTIONS_PER_IP:
-        return False
-    
-    ip_connections[ip].append(now)
-    return True
+def can_accept_connection(ip: str):
+    now = time.time()    
+    if ip in ip_connections:        
+        ip_connections[ip] = [t for t in ip_connections[ip] if now - t < IP_TIMEOUT]
+        
+        if len(ip_connections[ip]) >= MAX_CONNECTIONS_PER_IP:
+            return False
+        
+        ip_connections[ip].append(now)
+        return True
+    else:
+        ip_connections[ip] = [now]
+        return True
+
 
 
 
@@ -51,23 +55,14 @@ def cleanup_tables():
                     DELETE FROM pending_users 
                     WHERE expires_at IS NOT NULL AND expires_at <= CURRENT_TIMESTAMP
                 """)
-                users_deleted = cur.rowcount
 
                 cur.execute("""DELETE FROM appointments WHERE date < ? OR (date = ? AND start_time < ?)
                 """, (current_date, current_date, current_time))
-                apps_deleted = cur.rowcount
 
                 cur.execute("""DELETE FROM notifications WHERE created_at < ? OR (created_at < ? AND is_read = 1)
                             """,(one_week_ago, two_day_ago))
-                notes_deleted = cur.rowcount
                 
                 conn.commit()
-
-                if users_deleted or apps_deleted or notes_deleted:
-                    print(f"[{now.strftime('%Y-%m-%d %H:%M')}] Cleanup complete:")
-                    print(f" - {users_deleted} pending users removed")
-                    print(f" - {apps_deleted} past appointments removed")
-                    print(f" - {notes_deleted} old notifications removed")
 
         except Exception as e:
             print(f"Cleanup error - {e}")
@@ -132,12 +127,10 @@ if __name__ == "__main__":
     srv = socket.socket()
     srv.bind(("0.0.0.0", 1111))
     srv.listen(10)
-    
-    #__________####SKIP IN DEVELOPMENT, BRING BACK WHEN PRESENTING!!!!!!!!!!!!#######____________#
-    
-    # cleanup_thread = threading.Thread(target=cleanup_tables, daemon=True)
-    # cleanup_thread.start()
-    
+        
+    cleanup_thread = threading.Thread(target=cleanup_tables, daemon=True)
+    cleanup_thread.start()
+        
     main_thread(srv)
     
     

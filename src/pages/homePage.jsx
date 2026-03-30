@@ -1,6 +1,6 @@
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSocket } from "../socket/SocketContext";
 
 import LoadingScreen from "./views/LoadingScreen";
@@ -21,7 +21,7 @@ export default function HomePage({isPublic=false}) {
 
     const { id } = useParams(); 
 
-    const targetId = id || location.state?.freelancerId ||null
+    const [targetId, setTargetId] = useState(id || location.state?.freelancerId ||null)
 
     const [appointmentTimes, setAppointmentTimes] = useState(null)
 
@@ -31,8 +31,20 @@ export default function HomePage({isPublic=false}) {
 
     const isLoaded = authUser && Object.keys(authUser).length > 0;
     
+    useEffect(() =>{
+        const currentUserId = id || location.state?.freelancerId ||null
+        if (currentUserId == null){
+            setViewedFreelancer(null)
+            setAppointmentTimes(null)
+            return
+        }
+    }, [id,location.state])
+
+
     if (!isLoaded) return <LoadingScreen />;
     
+
+
     const renderContent = () => {
         if (authUser.role === "User" && viewedFreelancer) {
             return (

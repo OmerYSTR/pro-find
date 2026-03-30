@@ -5,69 +5,62 @@ from typing import Any
 import sqlite3
 from datetime import datetime, timedelta
 
-secret_prefix = b"CYBERISH"
+sec = b"CYBERISH"
 
 DATABASE = r"C:\Coding\pro-find\Python\my_app.db"
 
 
-def decode(token: str) -> Any:
+def decode(token: str):
     token_split = token.split(".")
     if len(token_split)!=2:
         return None
     
-    encoded_data,encoded_signature = token_split
+    enc_data,enc_sign = token_split
     try:    
-        decoded_data = b64decode(encoded_data)
-        data = loads(decoded_data)
-        provided_signature = b64decode(encoded_signature)
+        dec_data = b64decode(enc_data)
+        data = loads(dec_data)
+        provided_sign = b64decode(enc_sign)
     except:
         return None
     
-    calculated_signature = sha256(secret_prefix + decoded_data).hexdigest().encode()
-    if provided_signature != calculated_signature:
+    calc_sign = sha256(sec + dec_data).hexdigest().encode()
+    if provided_sign != calc_sign:
         return None
     return data
 
 
 
-def is_token_valid(token:str) -> bool:
-    decoded_token = decode(token)
-
-    if not decoded_token:
+def is_token_valid(token:str):
+    dec_tkn = decode(token)
+    
+    if not dec_tkn:
         return False
-
-    exp = datetime.fromtimestamp(decoded_token["exp"])
+    exp = datetime.fromtimestamp(dec_tkn["exp"])
     
     if exp < datetime.now():
         return False
-    
     return True
 
 
 
-def _encode(data: Any)->str:
-    decoded_data = dumps(data).encode()
-    encoded_data = b64encode(decoded_data).decode()
-
-    decoded_signature = sha256(secret_prefix + decoded_data).hexdigest().encode()
-    encoded_signature = b64encode(decoded_signature).decode()
-
-    return f"{encoded_data}.{encoded_signature}"
+def _encode(data):
+    dec_data = dumps(data).encode()
+    enc_data = b64encode(dec_data).decode()
+    dec_sign = sha256(sec + dec_data).hexdigest().encode()
+    enc_sign = b64encode(dec_sign).decode()
+    return f"{enc_data}.{enc_sign}"
 
 
 
-def create_token(user_email:str)->str|None:
+def create_token(user_email:str):
     with sqlite3.connect(DATABASE) as conn:
         cur = conn.cursor()
         
         cur.execute("SELECT id, full_name, created_at FROM users WHERE email=?", (user_email,))
         row = cur.fetchone()
         if not row:
-            return None
-        
+            return None 
         id, name, created_at = row
-        
-        token_obj = {"id":id, "email": user_email, "name":name, "Creation time": created_at, "exp":int((datetime.now()+timedelta(days=1)).timestamp())}
-        return _encode(token_obj)
+        tkn_obj = {"id":id, "email": user_email, "name":name, "Creation time": created_at, "exp":int((datetime.now()+timedelta(days=1)).timestamp())}
+        return _encode(tkn_obj)
     
-#print(create_token("yaffetsterno@gmail.com"))

@@ -321,59 +321,79 @@ export function AppointmentDetailModal({ appointment, onClose }) {
   if (!appointment) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-slate-900 border border-slate-700 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden">
-        <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-800/50">
-          <h3 className="text-xl font-bold text-white flex items-center gap-2">
-            <User className="text-blue-400" size={20} />
-            {appointment.person_name}
-          </h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
-            <X size={24} />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#020617]/90 backdrop-blur-md">
+      <div className="bg-[#0f172a] border-l-4 border-blue-500 w-full max-w-lg rounded-br-3xl rounded-tr-xl rounded-bl-xl shadow-[20px_20px_60px_rgba(0,0,0,0.5)] overflow-hidden transform -rotate-1 md:rotate-0">
+        
+        <div className="pt-8 px-8 pb-4 flex justify-between items-start">
+          <div> 
+            <h3 className="text-4xl font-black text-white tracking-tighter flex items-baseline gap-3">
+              {appointment.person_name}
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" title="Active Appointment" />
+            </h3>
+          </div>
+          <button 
+            onClick={onClose} 
+            className="p-2 bg-slate-800/50 hover:bg-rose-500/20 hover:text-rose-500 text-slate-500 rounded-full transition-all"
+          >
+            <X size={20} />
           </button>
         </div>
 
-        <div className="p-8 space-y-6">
-          <div className="flex gap-4">
-            <div className="flex-1 bg-slate-800/40 p-3 rounded-xl border border-slate-700/50">
-              <p className="text-slate-500 text-xs uppercase font-bold mb-1 flex items-center gap-1">
-                <Calendar size={12}/> Date
+        <div className="p-8 pt-4 space-y-8">
+          <div className="flex flex-wrap gap-3">
+            <div className="bg-slate-800/30 px-4 py-2 rounded-lg border-b-2 border-slate-700">
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                <Calendar size={10}/> Scheduled
               </p>
-              <p className="text-white font-medium">{appointment.display_date}</p>
+              <p className="text-blue-100 font-mono text-sm">{appointment.display_date}</p>
             </div>
-            <div className="flex-1 bg-slate-800/40 p-3 rounded-xl border border-slate-700/50">
-              <p className="text-slate-500 text-xs uppercase font-bold mb-1 flex items-center gap-1">
-                <Clock size={12}/> Time
+            <div className="bg-slate-800/30 px-4 py-2 rounded-lg border-b-2 border-slate-700">
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                <Clock size={10}/> Window
               </p>
-              <p className="text-white font-medium">{appointment.start_time} - {appointment.end_time}</p>
+              <p className="text-blue-100 font-mono text-sm">{appointment.start_time} — {appointment.end_time}</p>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <p className="text-slate-500 text-xs uppercase font-bold flex items-center gap-1">
-              <MapPin size={14} className="text-rose-500" /> Address
+          <div className="relative group">
+            <p className="text-xs font-black text-slate-500 uppercase tracking-tighter mb-2 flex items-center gap-2">
+              <MapPin size={14} className="text-blue-500" /> Location
             </p>
-            <p className="text-slate-200 leading-relaxed bg-slate-800/40 p-4 rounded-xl border border-slate-700/50">
-              {appointment.address}
-            </p>
+            <div className="bg-white/[0.03] hover:bg-white/[0.05] p-5 rounded-2xl border border-white/10 transition-colors">
+               <p className="text-slate-300 font-medium leading-snug">
+                {appointment.address}
+              </p>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <p className="text-slate-500 text-xs uppercase font-bold flex items-center gap-1">
-              <AlignLeft size={14} className="text-blue-500" /> Full Details
+          <div className="space-y-3 relative">
+             <div className="absolute -left-8 top-0 bottom-0 w-1 bg-slate-800/50" />
+             <p className="text-xs font-black text-slate-500 uppercase tracking-tighter flex items-center gap-2">
+              <AlignLeft size={14} className="text-blue-500" /> Briefing
             </p>
-            <div className="text-slate-300 leading-relaxed max-h-40 overflow-y-auto pr-2 custom-scrollbar">
-              {appointment.details || "No additional details provided."}
+            <div className="text-slate-400 leading-relaxed text-sm font-medium selection:bg-blue-500 selection:text-white">
+              {appointment.details ? (
+                <div className="space-y-2">
+                  {appointment.details.split('\n').map((line, i) => (
+                    <p key={i} className="border-b border-white/5 pb-1">{line}</p>
+                  ))}
+                </div>
+              ) : (
+                <span className="italic opacity-30">No special instructions provided...</span>
+              )}
             </div>
           </div>
         </div>
 
-        <div className="p-6 bg-slate-800/30 border-t border-slate-800 flex justify-end">
+        <div className="p-8 bg-white/[0.02] flex justify-between items-center">
+          <div className="hidden sm:block">
+            <p className="text-[9px] text-slate-600 font-mono uppercase">Reference: PRO-{appointment.id || 'N/A'}</p>
+          </div>
           <button 
             onClick={onClose}
-            className="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold transition-all"
+            className="px-10 py-4 bg-white text-black hover:bg-blue-600 hover:text-white rounded-xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-lg active:scale-95"
           >
-            Close
+            Close Record
           </button>
         </div>
       </div>
@@ -521,7 +541,7 @@ export function AppointmentBooking({ availability, jobDuration, onConfirm, onCan
             <div className="flex justify-between items-center border-b border-slate-800 pb-3">
                 <h3 className="text-blue-400 text-xs font-bold uppercase tracking-widest">Appointment Summary</h3>
                 <span className="bg-blue-500/10 text-blue-400 text-[10px] px-2 py-1 rounded-md border border-blue-500/20">
-                    {jobDuration} Service
+                    {parseDurationToHours(jobDuration)} hour Service
                 </span>
             </div>
             
