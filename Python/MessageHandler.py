@@ -13,7 +13,7 @@ from token_handler import is_token_valid, create_token, decode
 from collections import defaultdict
 from os import getenv
 from dotenv import load_dotenv
-
+import bleach
 
 #region Consts
 DATABASE = r"C:\Coding\pro-find\Python\my_app.db"
@@ -808,10 +808,13 @@ class BookAppointmentDispatcher(MessageHandler):
 
                 if app["start_time"] not in available_slots:
                     return MessageTypes.MAKE_APPOINTMENT, {StatusMessage.FAILED_TO_BOOK_APPOINTMENT.value: "Time slot is no longer available."}
-
+                
+                clean_details = bleach.clean(app["details"], tags=[], attributes={}, strip=True)
+                clean_address = bleach.clean(app["address"], tags=[], attributes={}, strip=True)
+                
                 cur.execute("""
                     INSERT INTO appointments (professional_id, customer_id, date, start_time, end_time, address, details, status)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, 'Requested')""", (app["prof_id"], app["user_id"], app["date"], app["start_time"], end_time_str, app["address"], app["details"])) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, 'Requested')""", (app["prof_id"], app["user_id"], app["date"], app["start_time"], end_time_str, clean_address, clean_details)) 
                 
                 cur.execute("""INSERT INTO notifications (user_id, message, is_read, created_at)
                             VALUES (?, ?, 0, ?)""", (app["prof_id"], "You have a pending appointment waiting for you", datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
