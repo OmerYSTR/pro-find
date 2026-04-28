@@ -57,6 +57,7 @@ export function ForgotPasswordAuthenticationRequest(ws, email, code, token=""){
     ws.send(msg)
 }
 
+
 export function ChangePasswordRequest(ws, email, pass, token=""){
     let payload = {"email":email,"password":pass }
     let msg = MsgBuild(MessageTypes.CHANGE_PASS, payload, token, "JSON")
