@@ -837,7 +837,7 @@ class BookAppointmentDispatcher(MessageHandler):
 
 
 
-#region searchpass
+#region search
 class ExistingJobsDispatcher(MessageHandler):
     def handle(self, msg:Message) -> tuple:
         try:
@@ -1154,41 +1154,3 @@ class EmailVerification:
             return False, {StatusMessage.VERIFICATION_BAD.value:"Not all fields were sent"}
 
 
-# import random
-
-# with sqlite3.connect(DATABASE) as conn:
-#     cur = conn.cursor()
-#     email_raw = "user@gmail.com"
-#     name_raw = "user"
-    
-#     for i in range(1001):
-#         email = str(i) + email_raw
-#         name = f"{name_raw}_{str(i)}"
-#         salt = os.urandom(16).hex()
-#         password_hash = hash_password("1", salt)
-#         options = ["Freelancer","User"]
-#         user_type = random.choice(options)
-#         created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        
-#         cur.execute("""INSERT INTO users (full_name, email, password_hash, user_type, created_at, salt) 
-#                     VALUES (?,?,?,?,?,?)""", (name, email, password_hash,user_type, created_at, salt))
-        
-        
-#         if user_type == "Freelancer":
-#             user_id = cur.lastrowid
-#             profession = random.choice(PROFESSIONS)
-#             amnt_of_cities = random.randint(1, 5)
-#             amount = random.randint(1, 5)
-#             service_cities_raw = random.sample(LOCALITIES, amount)
-#             service_cities = ", ".join(service_cities_raw)
-#             description = f"Hi I am a {profession}, I am very hardworking and ready to get you task completed -- user{i}"
-#             years_experience = i%10
-#             avg_job_duration = "01:00"
-#             start_time = "09:00"
-#             end_time = "17:00"
-#             hour_price = ((i*5)%150) + 20
-#             cur.execute("""INSERT INTO professional 
-#                (user_id, profession, service_cities, description, years_experience, avg_job_duration, start_time, end_time, hour_price) 
-#                VALUES (?,?,?,?,?,?,?,?,?)""", (user_id, profession, service_cities, description, years_experience, avg_job_duration, start_time, end_time, hour_price))
-
-#     conn.commit()
