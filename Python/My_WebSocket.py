@@ -296,8 +296,8 @@ def accept_client(clt_soc):
 
     
 def accept_TLS_encryption(clt_soc):
-    CERTIFICATE_PATH = r"C:\Coding\pro-find\certificate\server.crt"
-    KEY_PATH = r"C:\Coding\pro-find\certificate\server.key"
+    CERTIFICATE_PATH = r"W:\Omer\fin_proj\pro-find\certificate\server.crt"
+    KEY_PATH = r"W:\Omer\fin_proj\pro-find\certificate\server.key"
     # CERTIFICATE_PATH =r"D:\pro-find\certificate\server.crt"
     # KEY_PATH = r"D:\pro-find\certificate\server.key"
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)

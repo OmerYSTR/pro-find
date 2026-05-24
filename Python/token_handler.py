@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 sec = b"CYBERISH"
 
-DATABASE = "my_app.db"
+DATABASE = r"W:\Omer\fin_proj\pro-find\Python\my_app.db"
 
 
 def decode(token: str):

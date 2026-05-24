@@ -12,7 +12,7 @@ MAX_MESSAGES = 15
 TIME_WINDOW = 20 
 
 dispacher = MessageHandler.configure_dispatcher()
-DATABASE = "my_app.db"
+DATABASE = r"W:\Omer\fin_proj\pro-find\Python\my_app.db"
 
 MAX_CONNECTIONS_PER_IP = 5     
 IP_TIMEOUT = 60               

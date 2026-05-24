@@ -16,7 +16,7 @@ from dotenv import load_dotenv
 import bleach
 
 #region Consts
-DATABASE = "my_app.db"
+DATABASE = r"W:\Omer\fin_proj\pro-find\Python\my_app.db"
 load_dotenv()
 
 EMAIL = getenv("EMAIL")
@@ -24,9 +24,9 @@ PEPPER = getenv("PEPPER")
 AUTHENTICATION_PAS = getenv("AUTHENTICATION_PAS")
 
 
-with open ("professional.txt", 'r') as f:
+with open (r"W:\Omer\fin_proj\pro-find\Python\professional.txt", 'r') as f:
     PROFESSIONS = [line.strip() for line in f]
-with open("cities.txt", 'r') as f:
+with open(r"W:\Omer\fin_proj\pro-find\Python\cities.txt", 'r') as f:
     LOCALITIES = [line.strip() for line in f]
 
 
@@ -1154,3 +1154,7 @@ class EmailVerification:
             return False, {StatusMessage.VERIFICATION_BAD.value:"Not all fields were sent"}
 
 
+with sqlite3.connect(DATABASE) as conn:
+    cur = conn.cursor()
+    cur.execute("SELECT *  FROM users")
+    print(cur.fetchall())
